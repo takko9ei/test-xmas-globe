@@ -6,6 +6,7 @@ import { BaseStand } from "./BaseStand.js";
 import { GlobeGlass } from "./GlobeGlass.js";
 import { InnerWorld } from "./InnerWorld.js";
 import { SnowSystem } from "./SnowSystem.js";
+import { EnvironmentSystem } from "./EnvironmentSystem.js";
 
 // 1. 标准 Three.js 设置
 const scene = new THREE.Scene();
@@ -25,7 +26,13 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // 2. 实例化组员的对象
 const myObjects = [];
-const classesToLoad = [BaseStand, GlobeGlass, InnerWorld, SnowSystem];
+const classesToLoad = [
+  BaseStand,
+  GlobeGlass,
+  InnerWorld,
+  SnowSystem,
+  EnvironmentSystem,
+];
 
 // === 统一实例化所有对象 ===
 classesToLoad.forEach((ClassRef) => {

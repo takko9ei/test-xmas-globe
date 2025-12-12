@@ -10,15 +10,21 @@ export class GlobeGlass extends BaseObject {
 
     // Load the globe model
     loader.load(
-      "./assets/globe.glb",
+      "./assets/models/globe.glb",
       (gltf) => {
         this.model = gltf.scene;
 
         // Apply Normal Material to all meshes in the model
         this.model.traverse((child) => {
           if (child.isMesh) {
-            child.material = new THREE.MeshNormalMaterial({
-              side: THREE.DoubleSide,
+            child.material = new THREE.MeshPhysicalMaterial({
+              metalness: 0.1,
+              roughness: 0.05,
+              transmission: 1, // 玻璃质感
+              thickness: 0.5,
+              clearcoat: 1.0,
+              clearcoatRoughness: 0.1,
+              envMapIntensity: 1.5, // 增强反射
             });
           }
         });

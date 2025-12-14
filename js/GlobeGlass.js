@@ -42,9 +42,9 @@ export class GlobeGlass extends BaseObject {
   }
 
   update(time) {
-    if (this.model) {
-      // Rotate the globe
-      this.model.rotation.y += 0.005;
-    }
+    // if (this.model) {
+    //   // Rotate the globe
+    //   this.model.rotation.y += 0.005;
+    // }
   }
 }

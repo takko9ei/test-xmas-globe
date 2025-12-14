@@ -34,7 +34,7 @@ const classesToLoad = [
   EnvironmentSystem,
 ];
 
-// ===统一实例化所有对象===
+// ===instancialize all objects===
 classesToLoad.forEach((ClassRef) => {
   const instance = new ClassRef();
   scene.add(instance);

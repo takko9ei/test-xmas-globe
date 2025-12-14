@@ -25,7 +25,6 @@ export class BaseStand extends BaseObject {
             child.material.map = texture;
           }
         });
-
         this.add(model);
         console.log("BaseStand init done");
       },

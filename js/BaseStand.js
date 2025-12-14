@@ -4,7 +4,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export class BaseStand extends BaseObject {
   init() {
-    console.log("初始化底座...");
+    console.log("BaseStand init");
 
     const loader = new GLTFLoader();
     const textureLoader = new THREE.TextureLoader();
@@ -27,7 +27,7 @@ export class BaseStand extends BaseObject {
         });
 
         this.add(model);
-        console.log("底座模型加载完成");
+        console.log("BaseStand init done");
       },
       undefined,
       (error) => {

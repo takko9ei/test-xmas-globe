@@ -18,19 +18,19 @@ export class GlobeGlass extends BaseObject {
         this.model.traverse((child) => {
           if (child.isMesh) {
             child.material = new THREE.MeshPhysicalMaterial({
-              metalness: 0.1,
-              roughness: 0.05,
-              transmission: 1, // 玻璃质感
-              thickness: 0.5,
-              clearcoat: 1.0,
-              clearcoatRoughness: 0.1,
-              envMapIntensity: 1.5, // 增强反射
+              metalness: 0.0,
+              roughness: 0.0,
+              transmission: 1,
+              thickness: 0.1,
+              clearcoat: 0.1,
+              clearcoatRoughness: 0.05,
+              envMapIntensity: 1.5, // enhance reflection
             });
           }
         });
 
         this.add(this.model);
-        console.log("玻璃球模型加载完成");
+        console.log("GlobeGlass init done");
       },
       (xhr) => {
         console.log((xhr.loaded / xhr.total) * 100 + "% loaded");

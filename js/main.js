@@ -1,14 +1,14 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-// 引入组员的文件
+// imports
 import { BaseStand } from "./BaseStand.js";
 import { GlobeGlass } from "./GlobeGlass.js";
 import { InnerWorld } from "./InnerWorld.js";
 import { SnowSystem } from "./SnowSystem.js";
 import { EnvironmentSystem } from "./EnvironmentSystem.js";
 
-// 1. 标准 Three.js 设置
+// Standard Three.js setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -21,10 +21,10 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// 加个控制器方便调试
+// Add controller for debugging
 const controls = new OrbitControls(camera, renderer.domElement);
 
-// 2. 实例化组员的对象
+// Instance group members' objects
 const myObjects = [];
 const classesToLoad = [
   BaseStand,
@@ -34,7 +34,7 @@ const classesToLoad = [
   EnvironmentSystem,
 ];
 
-// === 统一实例化所有对象 ===
+// ===统一实例化所有对象===
 classesToLoad.forEach((ClassRef) => {
   const instance = new ClassRef();
   scene.add(instance);
@@ -42,14 +42,13 @@ classesToLoad.forEach((ClassRef) => {
 });
 // ================================
 
-// 3. 渲染循环
+// Render loop
 function animate(time) {
   requestAnimationFrame(animate);
 
-  // 把毫秒转成秒
   const timeSeconds = time * 0.001;
 
-  // 自动调用所有人的 update
+  // Automatically call update for all objects
   myObjects.forEach((obj) => {
     if (obj.update) obj.update(timeSeconds);
   });

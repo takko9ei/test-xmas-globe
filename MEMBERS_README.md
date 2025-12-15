@@ -79,7 +79,9 @@ project/
 
 ---
 
-## 4. How to Submit Your Work (GitHub Workflow)We are working together on the same repository. To prevent accidents, I have enabled **Branch Protection**.
+## 4. How to Submit Your Work (GitHub Workflow)
+
+We are working together on the same repository. To prevent accidents, I have enabled **Branch Protection**.
 
 **⚠️ GOLDEN RULE: You cannot push directly to the `main` branch.**
 If you try to `git push origin main`, it will fail. Please follow the steps below.

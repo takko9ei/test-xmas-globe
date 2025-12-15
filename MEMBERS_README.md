@@ -33,7 +33,7 @@ We are using a "No-Build" approach. You do **not** need to install Node.js or ru
     3. Run the command `git clone https://github.com/takko9ei/test-xmas-globe.git`.
     4. Wait for the cloning to complete.
     5. Open the cloned repository in VS Code.
-    - Once you have the repository folder, you can open it in VS Code. In VS Code, press `CTRL + `` to open the terminal, the terminal will be "located" in the repository folder, you can use git commands in the terminal.
+    - Once you have the repository folder, you can open it in VS Code. In VS Code, press `` ctrl + ` `` to open the terminal, the terminal will be "located" in the repository folder, you can use git commands in the terminal.
 
 ---
 

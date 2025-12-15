@@ -41,4 +41,10 @@ export class InnerWorld extends BaseObject {
       (error) => console.error("Error loading ground", error)
     );
   }
+  update(time) {
+    // if (this.model) {
+    //   // Rotate
+    //   this.model.rotation.y += 0.005;
+    // }
+  }
 }

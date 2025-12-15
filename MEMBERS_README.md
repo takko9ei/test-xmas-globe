@@ -23,8 +23,7 @@ We are using a "No-Build" approach. You do **not** need to install Node.js or ru
 3.  **Accept GitHub Invitation:**
     - Check your email for an invitation to this repository.
     - Click **"Accept Invitation"**.
-    - **Note:** You are added as a "Collaborator". This means you have direct access to this repository. **You do NOT need to Fork this project.
-      ** Just Clone it directly.
+    - **Note:** You are added as a "Collaborator". This means you have direct access to this repository. **You do NOT need to Fork this project.** Just Clone it directly.
     - If you have not been invited, please contact me(Li Zhuohang).
 
 ---
@@ -63,7 +62,9 @@ project/
     └── models/         # Put your 3D model files here
 ```
 
-###Your Task ("Fill in the Blanks")Open your assigned `.js` file (e.g., `SnowSystem.js`). You will see a Class structure. You need to focus on two functions:
+### Your Task ("Fill in the Blanks")
+
+Open your assigned `.js` file (e.g., `SnowSystem.js`). You will see a Class structure. You need to focus on two functions:
 
 1. **`init()`**:
 

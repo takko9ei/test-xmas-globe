@@ -4,7 +4,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export class InnerWorld extends BaseObject {
   init() {
-    console.log("InnerWorld init");
+    console.log("InnerWorld: loading...");
 
     const loader = new GLTFLoader();
     const textureLoader = new THREE.TextureLoader();
@@ -23,10 +23,11 @@ export class InnerWorld extends BaseObject {
           }
         });
         this.add(tree);
-        console.log("InnerWorld tree init done");
+        console.log("InnerWorld: tree loaded.");
       },
       undefined,
-      (error) => console.error("Error loading xmas_tree", error)
+      (error) =>
+        console.error("An error occurred loading the xmas_tree model", error)
     );
 
     // 2. Load Ground
@@ -35,10 +36,11 @@ export class InnerWorld extends BaseObject {
       (gltf) => {
         const ground = gltf.scene;
         this.add(ground);
-        console.log("InnerWorld ground init done");
+        console.log("InnerWorld: ground loaded.");
       },
       undefined,
-      (error) => console.error("Error loading ground", error)
+      (error) =>
+        console.error("An error occurred loading the ground model", error)
     );
   }
   update(time) {

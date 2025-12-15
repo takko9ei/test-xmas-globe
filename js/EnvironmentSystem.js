@@ -4,7 +4,7 @@ import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
 
 export class EnvironmentSystem extends BaseObject {
   init() {
-    console.log("EnvironmentSystem: initializing...");
+    console.log("EnvironmentSystem: loading...");
 
     // This model is implemented by Li Zhuohang
     // If you want to implement IGL(Image Based Lighting), or reflection effect, u can refer to

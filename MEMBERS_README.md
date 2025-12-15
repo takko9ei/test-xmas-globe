@@ -87,14 +87,20 @@ We are working together on the same repository. To prevent accidents, I have ena
 **⚠️ GOLDEN RULE: You cannot push directly to the `main` branch.**
 If you try to `git push origin main`, it will fail. Please follow the steps below.
 
-### Step 1: Start of the Day (Sync)Before you start coding, make sure you have the latest code from everyone else.
+Some of these operations can also be done through the GUI in VS Code, at the third tab on the left(Source control).
+
+### Step 1: Start of the Day (Sync)
+
+Before you start coding, make sure you have the latest code from everyone else.
 
 ```bash
 git checkout main      # Go to the main folder
 git pull origin main   # Download updates from the cloud
 ```
 
-### Step 2: Create Your Workspace (Branch)Create a separate "branch" for your work. Think of this as a "Save Slot" or a copy of the project.
+### Step 2: Create Your Workspace (Branch)
+
+Create a separate "branch" for your work. Think of this as a "Save Slot" or a copy of the project.
 
 - **Naming convention:** `feature/yourName-task`
 
@@ -104,7 +110,9 @@ git checkout -b feature/yourName-task
 
 ```
 
-### Step 3: Work & Save (Commit)Write your code -> Save the file -> Check the browser.
+### Step 3: Work & Save (Commit)
+
+Write your code -> Save the file -> Check the browser(Live server).
 
 When you are happy with your progress:
 
@@ -114,7 +122,9 @@ git commit -m "Added rotation animation to snow"  # 2. Save with a message
 
 ```
 
-### Step 4: Upload (Push)Upload your branch to GitHub.
+### Step 4: Upload (Push)
+
+Upload your branch to GitHub.
 
 ```bash
 git push -u origin feature/yourName-task
@@ -127,19 +137,21 @@ git push -u origin feature/yourName-task
 2. You will see a yellow banner: **"Compare & pull request"**. Click it.
 3. Write a short title describing what you did.
 4. Click **Create Pull Request**.
-5. **Let me (the Tech Lead) know.** I will review the code and merge it into the main project.
+5. **Let me know.** I will review the code and merge it into the main project.
 
 ---
 
-## 5. Resources & Help###Cheat Sheets (Copy-Paste from here!)\* **Official Three.js Examples:** [https://threejs.org/examples/](https://threejs.org/examples/)
+## 5. Resources & Help
+
+### Cheat Sheets (Copy-Paste from here!)\* **Official Three.js Examples:** [https://threejs.org/examples/](https://threejs.org/examples/)
 
 - _Search for: `geometry`, `material`, `transparency`._
 - _Click the `< >` button at the bottom right to see the code._
 
 - **Documentation:** [https://threejs.org/docs/](https://threejs.org/docs/)
 
-###Troubleshooting\* **Error: "Push declined" or "Protected branch":** You are trying to push to `main`. Please create a new branch (`Step 2`) and push that instead.
+### Troubleshooting
+
+**Error: "Push declined" or "Protected branch":** You are trying to push to `main`. Please create a new branch (`Step 2`) and push that instead.
 
 - **Browser Screen is Black:** Check the **Console** (Press F12 -> Console tab). If there is a red error, screenshot it and send it to the group chat.
-
-Let's make an awesome Christmas Globe! 🚀

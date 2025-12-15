@@ -4,7 +4,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export class BaseStand extends BaseObject {
   init() {
-    console.log("BaseStand init");
+    console.log("BaseStand: loading...");
 
     const loader = new GLTFLoader();
     const textureLoader = new THREE.TextureLoader();
@@ -26,11 +26,11 @@ export class BaseStand extends BaseObject {
           }
         });
         this.add(model);
-        console.log("BaseStand init done");
+        console.log("BaseStand: loaded.");
       },
       undefined,
       (error) => {
-        console.error("An error happened loading the basement model", error);
+        console.error("An error occurred loading the basement model", error);
       }
     );
   }

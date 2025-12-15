@@ -15,11 +15,14 @@ export class BaseObject extends THREE.Group {
 
   // [Fill in the blank] initialize your model
   init() {
-    console.log("BaseObject init");
+    const name = this.constructor.name;
+    console.error(`Error: ${name} has not implemented init() method!`);
   }
 
   // [Fill in the blank] update your model
   update(time) {
-    // Default do nothing
+    const name = this.constructor.name;
+    console.warn(`Warning: ${name} has not implemented update() method!`);
+    this.update = function () {};
   }
 }

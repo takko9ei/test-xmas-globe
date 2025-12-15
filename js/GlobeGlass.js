@@ -4,7 +4,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export class GlobeGlass extends BaseObject {
   init() {
-    console.log("初始化玻璃球...");
+    console.log("GlobeGlass: loading...");
 
     const loader = new GLTFLoader();
 
@@ -30,13 +30,15 @@ export class GlobeGlass extends BaseObject {
         });
 
         this.add(this.model);
-        console.log("GlobeGlass init done");
+        console.log("GlobeGlass: loaded.");
       },
       (xhr) => {
-        console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+        console.log(
+          "Xhr for GlobeGlass: " + (xhr.loaded / xhr.total) * 100 + "% loaded"
+        );
       },
       (error) => {
-        console.error("An error happened loading the globe model", error);
+        console.error("An error occurred loading the globe model", error);
       }
     );
   }

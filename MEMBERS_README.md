@@ -86,7 +86,7 @@ We are working together on the same repository. To prevent accidents, I have ena
 **⚠️ GOLDEN RULE: You cannot push directly to the `main` branch.**
 If you try to `git push origin main`, it will fail. Please follow the steps below.
 
-###Step 1: Start of the Day (Sync)Before you start coding, make sure you have the latest code from everyone else.
+### Step 1: Start of the Day (Sync)Before you start coding, make sure you have the latest code from everyone else.
 
 ```bash
 git checkout main      # Go to the main folder

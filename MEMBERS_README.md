@@ -25,6 +25,15 @@ We are using a "No-Build" approach. You do **not** need to install Node.js or ru
     - Click **"Accept Invitation"**.
     - **Note:** You are added as a "Collaborator". This means you have direct access to this repository. **You do NOT need to Fork this project.** Just Clone it directly.
     - If you have not been invited, please contact me(Li Zhuohang).
+4.  **Prepare Git:**
+    - Access git official website to install git.
+    - You can clone the repository by:
+    1. Locate the folder where you want to clone the repository.
+    2. Right click, and select `Git Bash here`.
+    3. Run the command `git clone https://github.com/takko9ei/test-xmas-globe.git`.
+    4. Wait for the cloning to complete.
+    5. Open the cloned repository in VS Code.
+    - Once you have the repository folder, you can open it in VS Code. In VS Code, press`CTRL + \` to open the terminal, the terminal will be "located" in the repository folder, you can use git commands in the terminal.
 
 ---
 
@@ -143,7 +152,9 @@ git push -u origin feature/yourName-task
 
 ## 5. Resources & Help
 
-### Cheat Sheets (Copy-Paste from here!)\* **Official Three.js Examples:** [https://threejs.org/examples/](https://threejs.org/examples/)
+### Cheat Sheets (Copy-Paste from here!)
+
+**Official Three.js Examples:** [https://threejs.org/examples/](https://threejs.org/examples/)
 
 - _Search for: `geometry`, `material`, `transparency`._
 - _Click the `< >` button at the bottom right to see the code._

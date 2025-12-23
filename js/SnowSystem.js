@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { BaseObject } from "./BaseObject.js";
 
-// If you cancel code comment (ctrl+/) here, you will see a little cube moves up and down
+// If you cancel code comment (ctrl+/) here, you will see a little cube moves up and down,
 // Write your snow code here
 export class SnowSystem extends BaseObject {
   // Override init method

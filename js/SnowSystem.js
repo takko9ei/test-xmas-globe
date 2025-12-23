@@ -8,12 +8,12 @@ export class SnowSystem extends BaseObject {
 
     // === Exposed Parameters ===
     this.params = {
-      sphereRadius: 0.97,
+      sphereRadius: 0.95,
       sphereCenter: new THREE.Vector3(0, 0, 0),
-      particleSpeed: 0.005,
-      particleSize: 0.008,
+      particleSpeed: 0.003,
+      particleSize: 0.012,
       color: new THREE.Color(0xffffff),
-      brightness: 1.5,
+      brightness: 1.9,
     };
     // ==========================
 

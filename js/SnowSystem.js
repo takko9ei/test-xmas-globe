@@ -20,6 +20,7 @@ export class SnowSystem extends BaseObject {
     this.count = 1500;
 
     // Use dynamic geometry based on particleSize
+    // 2 particlesize, for a square mesh
     const geometry = new THREE.PlaneGeometry(
       this.params.particleSize,
       this.params.particleSize

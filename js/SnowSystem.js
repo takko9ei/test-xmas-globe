@@ -179,3 +179,5 @@ export class SnowSystem extends BaseObject {
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 }
+//这个代码在哪一行做了”将创建的这些面片都塞进一个mesh里面的？
+//具体的，描述一下完整的snowsystem中的面片绘制流程，包括cpu和gpu是怎么协同工作的

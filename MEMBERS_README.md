@@ -54,6 +54,7 @@ I have designed the project using a **Modular Structure**. Please only edit the 
 
 ### File Structure
 
+
 ```text
 project/
 ├── index.html          # [DO NOT EDIT] The entry point
@@ -61,10 +62,13 @@ project/
 │   ├── main.js         # [DO NOT EDIT] The engine that runs the loop
 │   ├── BaseObject.js   # [DO NOT EDIT] The parent class
 │   │
-│   ├── GlobeGlass.js   # 🟢 (Role A) Write your Glass code here
-│   ├── SnowSystem.js   # 🔵 (Role B) Write your Snow code here
-│   ├── InnerWorld.js   # 🟡 (Role C) Write your Interior code here
-│   └── BaseStand.js    # 🟠 (Role D) Write your Base code here
+│   ├── GlobeGlass.js          # 🟢 (Role A's part) Finished.
+│   ├── EnvironmentSystem.js   # 🟢 (Role A's part) Finished.
+│   ├── BaseStand.js           # 🟢 (Role A's part) Finished. But all of my part I am considering to optimize them.
+│   ├── InnerWorld.js          # 🟡 (Role B's part) Handle with InnerWorld's looking(mainly shader)
+│   ├── GlitterAppearance.js   # 🔵 (Role C's part) Modify appearance of flakes
+│   ├── SnowSystem.js          # 🔵 (Role C's part) Handle with 'action' of snowflakes(How it act is up to you. You can even keep the existing effect if you think its good lol)
+│   └── LightingSystem.js      # 🟠 (Role D's part) Add lights here. I will add template later.
 │
 └── assets/
     └── textures/       # Put your texture images here
@@ -166,3 +170,5 @@ git push -u origin feature/yourName-task
 **Error: "Push declined" or "Protected branch":** You are trying to push to `main`. Please create a new branch (`Step 2`) and push that instead.
 
 - **Browser Screen is Black:** Check the **Console** (Press F12 -> Console tab). If there is a red error, screenshot it and send it to the group chat.
+
+- **Since the skeleton is made by me, feel free to ask me(If Generative AI can't help you;))**

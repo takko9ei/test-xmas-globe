@@ -7,6 +7,7 @@ import { GlobeGlass } from "./GlobeGlass.js";
 import { InnerWorld } from "./InnerWorld.js";
 import { SnowSystem } from "./SnowSystem.js";
 import { EnvironmentSystem } from "./EnvironmentSystem.js";
+import { Lights } from "./Lights.js";
 
 // Standard Three.js setup
 const scene = new THREE.Scene();
@@ -32,6 +33,7 @@ const classesToLoad = [
   InnerWorld,
   SnowSystem,
   EnvironmentSystem,
+  Lights,
 ];
 
 // ===instancialize all objects===

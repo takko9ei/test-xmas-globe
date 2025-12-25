@@ -1,5 +1,10 @@
 import * as THREE from "three";
 
+// TO Who Writes Code Here
+// Better try receiving light, which implemented in lights.js
+// As for now, the shining effect is only a simple product with view dir
+// Now, the effects not fit the lighting effect of other models verywell(if you see the rendered result, you may find a little weird)
+
 export function createGlitterMaterial(options = {}) {
   const color = options.color || new THREE.Color(0xffffff);
   const brightness =

@@ -10,7 +10,7 @@ export class GlobeGlass extends BaseObject {
 
     // Load the globe model
     loader.load(
-      "./assets/models/globe.glb",
+      "./assets/models/globe-alternative.glb",
       (gltf) => {
         this.model = gltf.scene;
 
@@ -21,10 +21,13 @@ export class GlobeGlass extends BaseObject {
               metalness: 0.0,
               roughness: 0.0,
               transmission: 1,
-              thickness: 0.1,
+              ior: 1.2,
+              thickness: 0.5,
               clearcoat: 0.1,
-              clearcoatRoughness: 0.05,
+              clearcoatRoughness: 0.00,
               envMapIntensity: 1.5, // enhance reflection
+              attenuationColor: new THREE.Color(0xefefff), // 极淡的蓝
+              attenuationDistance: 0.8,
             });
           }
         });

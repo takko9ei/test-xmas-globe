@@ -25,6 +25,7 @@ document.body.appendChild(renderer.domElement);
 
 // Add controller for debugging
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.zoomSpeed = 5.0;
 
 // Instance group members' objects
 const myObjects = [];

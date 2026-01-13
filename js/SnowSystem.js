@@ -6,7 +6,7 @@ export class SnowSystem extends BaseObject {
   init() {
     console.log("SnowSystem init");
 
-    // === Exposed Parameters ===
+    // exposed params
     this.params = {
       sphereRadius: 0.95,
       sphereCenter: new THREE.Vector3(0, 0, 0),
@@ -15,7 +15,6 @@ export class SnowSystem extends BaseObject {
       color: new THREE.Color(0xffffff),
       brightness: 1.9,
     };
-    // ==========================
 
     this.count = 1500;
 
@@ -140,14 +139,63 @@ export class SnowSystem extends BaseObject {
     const dummy = new THREE.Object3D();
     const radiusSq = sphereRadius * sphereRadius;
 
+    // window drag
+    if (!this.lastScreenPos) {
+      this.lastScreenPos = new THREE.Vector2(window.screenX, window.screenY);
+      this.lastWindowSize = new THREE.Vector2(
+        window.outerWidth,
+        window.outerHeight
+      );
+    }
+
+    const currentScreenPos = new THREE.Vector2(window.screenX, window.screenY);
+    const currentWindowSize = new THREE.Vector2(
+      window.outerWidth,
+      window.outerHeight
+    );
+
+    // Calculate delta (velocity of the window)
+    const deltaMove = new THREE.Vector2();
+    // Only calculate inertia if window size hasn't changed (ignore resize)
+    if (
+      currentWindowSize.x === this.lastWindowSize.x &&
+      currentWindowSize.y === this.lastWindowSize.y
+    ) {
+      deltaMove.subVectors(currentScreenPos, this.lastScreenPos);
+    }
+
+    // Update history
+    this.lastScreenPos.copy(currentScreenPos);
+    this.lastWindowSize.copy(currentWindowSize);
+    // Map: Screen X+ (Right) -> World X- (Left).
+    //      Screen Y+ (Down) -> World Y+ (Up).
+    const conversionFactor = 0.0003; // Scaling pixels to world units
+    const inertiaForce = new THREE.Vector3(
+      deltaMove.x * conversionFactor,
+      -deltaMove.y * conversionFactor,
+      0
+    ); // The window moves down, the flakes goes down
+
     // Temp vector for distance check
     const tempPos = new THREE.Vector3();
 
     for (let i = 0; i < this.count; i++) {
       const p = this.particles[i];
 
+      // Init extra velocity if not exists
+      if (!p.inertialVelocity) p.inertialVelocity = new THREE.Vector3();
+
+      // Apply new inertia
+      p.inertialVelocity.add(inertiaForce);
+
+      // Damp existing inertia
+      p.inertialVelocity.multiplyScalar(0.95);
+
+      // Total velocity for this frame
+      const totalVelocity = p.velocity.clone().add(p.inertialVelocity);
+
       // Move
-      p.position.add(p.velocity);
+      p.position.add(totalVelocity);
 
       // Rotate
       p.rotation.x += p.rotSpeed.x;
@@ -159,19 +207,17 @@ export class SnowSystem extends BaseObject {
       tempPos.copy(p.position).sub(sphereCenter);
 
       // If outside radius OR too low (bottom of sphere)
-      // Actually, just checking radius is enough to keep them inside the spherical volume.
+      // just checking radius is enough to keep them inside the spherical volume.
       // But if they fall out the bottom, we want to respawn them.
 
       // We respawn if:
       // 1. Distance > Radius (Exited sphere)
-      // 2. OR y is below the sphere bottom (relative to center) -> strictly, 1 covers this, but we might want them to die earlier if we only want snow in the top half?
-      // User said: "limit all particles in a sphere range". So strictly radius check.
+      // 2. OR y is below the sphere bottom (relative to center)
 
       if (tempPos.lengthSq() > radiusSq) {
-        // To prevent popping, maybe we only respawn if they are at the BOTTOM hemisphere?
-        // If they drift out the side/top, we should force them back or respawn?
-        // Simple interaction: Respawn.
+        // Simple interaction: respawn
         this.generateParticle(p);
+        p.inertialVelocity.set(0, 0, 0); // Reset inertia on respawn
       }
 
       this.updateParticleMatrix(i, p, dummy);
@@ -179,5 +225,3 @@ export class SnowSystem extends BaseObject {
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 }
-//这个代码在哪一行做了”将创建的这些面片都塞进一个mesh里面的？
-//具体的，描述一下完整的snowsystem中的面片绘制流程，包括cpu和gpu是怎么协同工作的

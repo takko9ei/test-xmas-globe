@@ -25,7 +25,7 @@ document.body.appendChild(renderer.domElement);
 
 // Add controller for debugging
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.zoomSpeed = 5.0;
+controls.zoomSpeed = 3.0;
 
 // Instance group members' objects
 const myObjects = [];
@@ -54,7 +54,7 @@ function animate(time) {
 
   // Automatically call update for all objects
   myObjects.forEach((obj) => {
-    if (obj.update) obj.update(timeSeconds);
+    if (obj.update) obj.update(timeSeconds, camera);
   });
 
   renderer.render(scene, camera);

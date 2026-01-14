@@ -47,14 +47,13 @@ export class SnowSystem extends BaseObject {
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 
-  // Generate a particle STRICTLY inside the defined sphere
+  // Generate a particle inside hard-defined sphere
   generateParticle(p, initial = false) {
     const { sphereRadius, sphereCenter, particleSpeed } = this.params;
 
-    // 1. Position Generation
-    // We need a random point inside the sphere: sphereCenter + random_in_radius
-    // If NOT initial (respawning), we prefer them to spawn at the top of the sphere to fall down,
-    // but still STRICTLY inside the sphere boundaries.
+    // position generate
+    // sphereCenter + random_in_radius
+    // If NOT initial, we prefer them to spawn at the top of the sphere to fall down,
 
     let pos = new THREE.Vector3();
 
@@ -70,18 +69,14 @@ export class SnowSystem extends BaseObject {
         r * Math.sin(phi) * Math.sin(theta)
       );
     } else {
-      // Respawn: Pick a point on the top Hemisphere or mainly top area to simulate falling in
-      // To keep it strictly in sphere, we can pick a random point on a disk at a high Y,
-      // OR picking a random point in the top cap.
-
-      // Let's spawn them in the top 20% of the sphere volume for continuity
+      // spawn them in the top 20% of the sphere volume for continuity
       // y range: [sphereRadius * 0.8, sphereRadius]
-      // But we must respect the spherical boundary at that Y.
+      // But we must respect the spherical boundary at that Y
 
       const rVal = sphereRadius;
       // height from center
-      const yMin = rVal * 0.5; // Start showing up from half way up
-      const yMax = rVal * 0.95; // Don't spawn perfectly at edge to avoid clipping instantly
+      const yMin = rVal * 0.5; // start showing up from half way up
+      const yMax = rVal * 0.95; // don't spawn perfectly at edge to avoid clipping instantly
 
       const y = yMin + Math.random() * (yMax - yMin);
 
@@ -97,16 +92,16 @@ export class SnowSystem extends BaseObject {
     pos.add(sphereCenter);
     p.position = pos;
 
-    // 2. Velocity
+    // velocity
     // Falling down (-y) with some sway
     const speed = particleSpeed;
     p.velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * speed * 0.5, // Sway X
+      (Math.random() - 0.5) * speed * 0.5, // sway X
       -(speed + Math.random() * speed * 0.5), // Fall Y
       (Math.random() - 0.5) * speed * 0.5 // Sway Z
     );
 
-    // 3. Rotation
+    // rotation
     p.rotation = new THREE.Euler(
       Math.random() * Math.PI,
       Math.random() * Math.PI,
@@ -167,14 +162,38 @@ export class SnowSystem extends BaseObject {
     // Update history
     this.lastScreenPos.copy(currentScreenPos);
     this.lastWindowSize.copy(currentWindowSize);
-    // Map: Screen X+ (Right) -> World X- (Left).
-    //      Screen Y+ (Down) -> World Y+ (Up).
-    const conversionFactor = 0.0003; // Scaling pixels to world units
-    const inertiaForce = new THREE.Vector3(
-      deltaMove.x * conversionFactor,
-      -deltaMove.y * conversionFactor,
-      0
-    ); // The window moves down, the flakes goes down
+    // Map: Screen Space Delta -> World Space Force
+    // Screen X+ is Right, Screen Y+ is Down
+    // We want:
+    //  Screen Right -> Camera Right
+    //  Screen Down  -> Camera Down (World -Y relative to camera if camera was upright, but generally Camera's local -Y in view space, or simply -CameraUp in World Space)
+    // "Screen Down" roughly corresponds to "Camera Down" vector in world space.
+
+    // Let's get camera basis vectors in World Space
+    // default camera is optional in signature, make sure we have it
+    const camera = arguments[1]; // Or change signature to update(time, camera)
+
+    // Fallback if camera not passed (though we added it to main.js)
+    let cameraRight = new THREE.Vector3(1, 0, 0);
+    let cameraUp = new THREE.Vector3(0, 1, 0);
+
+    if (camera && camera.isCamera) {
+      // Construct basis from camera rotation
+      const matrix = new THREE.Matrix4().extractRotation(camera.matrixWorld);
+
+      // Column 0 is Right, Column 1 is Up, Column 2 is -Forward
+      cameraRight.setFromMatrixColumn(matrix, 0);
+      cameraUp.setFromMatrixColumn(matrix, 1);
+    }
+
+    const conversionFactor = 0.0003;
+
+    // deltaMove.x (Right) * CameraRight
+    // deltaMove.y (Down)  * -CameraUp  (because deltaMove.y is positive DOWN, we want vector pointing DOWN)
+
+    const inertiaForce = new THREE.Vector3();
+    inertiaForce.addScaledVector(cameraRight, deltaMove.x * conversionFactor);
+    inertiaForce.addScaledVector(cameraUp, -deltaMove.y * conversionFactor);
 
     // Temp vector for distance check
     const tempPos = new THREE.Vector3();
@@ -206,14 +225,9 @@ export class SnowSystem extends BaseObject {
       // Calculate distance from sphere center
       tempPos.copy(p.position).sub(sphereCenter);
 
-      // If outside radius OR too low (bottom of sphere)
-      // just checking radius is enough to keep them inside the spherical volume.
-      // But if they fall out the bottom, we want to respawn them.
-
       // We respawn if:
       // 1. Distance > Radius (Exited sphere)
       // 2. OR y is below the sphere bottom (relative to center)
-
       if (tempPos.lengthSq() > radiusSq) {
         // Simple interaction: respawn
         this.generateParticle(p);

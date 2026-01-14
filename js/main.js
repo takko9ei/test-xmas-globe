@@ -23,6 +23,18 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
+// Handle window resize to keep canvas centered and responsive
+window.addEventListener("resize", () => {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(window.devicePixelRatio);
+});
+
 // Add controller for debugging
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.zoomSpeed = 3.0;

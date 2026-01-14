@@ -14,7 +14,7 @@ export class InnerWorld extends BaseObject {
     treeTexture.flipY = false;
 
     loader.load(
-      "./assets/models/xmas_tree.glb",
+      "./assets/models/tree-edited.glb",
       (gltf) => {
         const tree = gltf.scene;
         tree.traverse((child) => {

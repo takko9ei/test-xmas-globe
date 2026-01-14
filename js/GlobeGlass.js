@@ -10,7 +10,7 @@ export class GlobeGlass extends BaseObject {
 
     // Load the globe model
     loader.load(
-      "./assets/models/globe-alternative.glb",
+      "./assets/models/globe-edited.glb",
       (gltf) => {
         this.model = gltf.scene;
 
@@ -24,7 +24,7 @@ export class GlobeGlass extends BaseObject {
               ior: 1.2,
               thickness: 0.5,
               clearcoat: 0.1,
-              clearcoatRoughness: 0.00,
+              clearcoatRoughness: 0.0,
               envMapIntensity: 1.5, // enhance reflection
               attenuationColor: new THREE.Color(0xefefff), // 极淡的蓝
               attenuationDistance: 0.8,

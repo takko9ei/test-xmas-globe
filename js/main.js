@@ -44,7 +44,6 @@ classesToLoad.forEach((ClassRef) => {
   scene.add(instance);
   myObjects.push(instance);
 });
-// ================================
 
 // Render loop
 function animate(time) {

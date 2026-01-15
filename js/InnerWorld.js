@@ -386,6 +386,10 @@ export class InnerWorld extends BaseObject {
     };
     const remember = (p) => placed.push(p.clone());
 
+    // Only allow decorations on upward-facing surfaces (avoid underside faces)
+    const MIN_UP_NY = 0.25; // 0=side, 1=straight up
+    const isUpFacing = (hit) => !!hit && !!hit.nL && hit.nL.y >= MIN_UP_NY;
+
     // Helper: mark swingable and cache base transform
     const markSwing = (obj, opts = {}) => {
       obj.userData.__swing = true;
@@ -529,9 +533,9 @@ export class InnerWorld extends BaseObject {
       bevelSegments: 1,
     });
 
-    const miniStarCount = 18;
+    const miniStarCount = 12;
     const golden = 2.399963229728653; // golden angle
-    const minStarSep = 0.11;
+    const minStarSep = 0.16;
 
     for (let i = 0; i < miniStarCount; i++) {
       const s = new THREE.Mesh(miniStarGeo, miniStarMat);
@@ -549,10 +553,18 @@ export class InnerWorld extends BaseObject {
       for (let attempt = 0; attempt < 14 && !placedOk; attempt++) {
         const a = a0 + (Math.random() - 0.5) * 0.45;
         hit = sampleTreeSurfaceLocal(a, y, 0.004);
+        if (!isUpFacing(hit)) continue;
         if (okWithSpacing(hit.posL, minStarSep)) placedOk = true;
       }
       if (!placedOk) {
         hit = sampleTreeSurfaceLocal(a0, y, 0.004);
+        // If fallback hit is not up-facing, nudge angle until we find an up-facing patch
+        if (!isUpFacing(hit)) {
+          for (let k = 0; k < 20; k++) {
+            hit = sampleTreeSurfaceLocal(a0 + (k + 1) * 0.35, y, 0.004);
+            if (isUpFacing(hit)) break;
+          }
+        }
       }
 
       s.position.copy(hit.posL);
@@ -570,7 +582,7 @@ export class InnerWorld extends BaseObject {
       this._deco.add(s);
     }
 
-    // --- Stockings (hung on the tree, facing outward; no hanger/ring) ---
+    // --- Stockings (uniformly distributed on the full tree surface, no overlap) ---
     const sockGroup = new THREE.Group();
 
     const cuffMat = new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.9, metalness: 0.0 });
@@ -580,7 +592,6 @@ export class InnerWorld extends BaseObject {
       const baseMat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.72, metalness: 0.0 });
       const accentMat = new THREE.MeshStandardMaterial({ color: accentColor, roughness: 0.8, metalness: 0.0 });
 
-      // Simple stylized sock: body + foot + cuff + stripe (no hanger)
       const body = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.078, 0.028), baseMat);
       const foot = new THREE.Mesh(new THREE.BoxGeometry(0.050, 0.030, 0.028), baseMat);
       const cuff = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.020, 0.032), cuffMat);
@@ -594,47 +605,67 @@ export class InnerWorld extends BaseObject {
       g.add(body, foot, cuff, stripe);
       g.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
 
-      // Make the whole sock swing slightly like other ornaments
-      markSwing(g, { amp: 1.6, speed: 0.9 });
+      markSwing(g, { amp: 1.4, speed: 0.9 });
       return g;
     };
 
-    // Place socks around the tree, lower-mid band, with even angles and minimum spacing.
-    const sockCount = 8;
-    const minSockSep = 0.16;
+    const sockCount = 6;
+    const minSockSep = 0.26;
 
     for (let i = 0; i < sockCount; i++) {
       const sock = makeSock(0xc10f1f, 0xffffff);
 
-      // Fill a lower-mid band to balance the stars above
+      // Stratified height so socks don't cluster on one band
       const u = (i + 0.5) / sockCount;
-      const t = 0.42 + u * 0.28; // 0.42..0.70
-      const y = (center.y - treeH / 2) + 0.12 + t * (treeH * 0.75);
+      const tBase = 0.18 + u * 0.72; // 0.18..0.90
 
-      // Even angles with jitter
-      const a0 = (i / sockCount) * Math.PI * 2;
+      // Golden-angle around the full tree (0..2π)
+      const golden = 2.399963229728653;
+      const aBase = (i * golden) % (Math.PI * 2);
 
       let hit = null;
       let placedOk = false;
-      for (let attempt = 0; attempt < 16 && !placedOk; attempt++) {
-        const a = a0 + (Math.random() - 0.5) * 0.55;
-        // Slightly embedded so it looks attached to branches
-        hit = sampleTreeSurfaceLocal(a, y, -0.010);
+
+      for (let attempt = 0; attempt < 60 && !placedOk; attempt++) {
+        const jitterT = (Math.random() - 0.5) * 0.06;
+        const jitterA = (Math.random() - 0.5) * 0.55;
+
+        const t = THREE.MathUtils.clamp(tBase + jitterT, 0.16, 0.92);
+        const y = (center.y - treeH / 2) + 0.12 + t * (treeH * 0.75);
+
+        // FULL 360° distribution
+        const a = aBase + jitterA;
+
+        // Positive offset: keep outside surface
+        hit = sampleTreeSurfaceLocal(a, y, 0.016);
+        if (!isUpFacing(hit)) continue;
+        // Enforce spacing so socks never overlap
         if (okWithSpacing(hit.posL, minSockSep)) placedOk = true;
       }
+
       if (!placedOk) {
-        hit = sampleTreeSurfaceLocal(a0, y, -0.010);
+        // Fallback placement (still full 360°)
+        const y = (center.y - treeH / 2) + 0.12 + tBase * (treeH * 0.75);
+        hit = sampleTreeSurfaceLocal(aBase, y, 0.016);
+        // If fallback hit is not up-facing, nudge angle until we find an up-facing patch
+        if (!isUpFacing(hit)) {
+          for (let k = 0; k < 30; k++) {
+            hit = sampleTreeSurfaceLocal(aBase + (k + 1) * 0.30, y, 0.016);
+            if (isUpFacing(hit)) break;
+          }
+        }
       }
 
       sock.position.copy(hit.posL);
       remember(hit.posL);
 
-      // Face outward using the surface normal
+      // Face outward
       sock.lookAt(sock.position.clone().add(hit.nL));
       sock.rotateY(Math.PI);
 
-      sock.rotation.z += 0.12 + (Math.random() - 0.5) * 0.05;
-      sock.rotation.x += -0.06 + (Math.random() - 0.5) * 0.05;
+      // Slight natural tilt (but keep it readable)
+      sock.rotation.z += (Math.random() - 0.5) * 0.18;
+      sock.rotation.x += -0.05 + (Math.random() - 0.5) * 0.12;
 
       sockGroup.add(sock);
     }

@@ -24,6 +24,8 @@ renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 // Handle window resize to keep canvas centered and responsive
+/* 
+// OLD RESIZE LOGIC (Commented out for performance)
 window.addEventListener("resize", () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -33,6 +35,22 @@ window.addEventListener("resize", () => {
 
   renderer.setSize(width, height);
   renderer.setPixelRatio(window.devicePixelRatio);
+}); 
+*/
+
+let resizeTimeout;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+  }, 100); // 100ms debounce
 });
 
 // Add controller for debugging

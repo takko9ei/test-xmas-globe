@@ -19,7 +19,6 @@ export class SnowSystem extends BaseObject {
     this.count = 1500;
 
     // Use dynamic geometry based on particleSize
-    // 2 particlesize, for a square mesh
     const geometry = new THREE.PlaneGeometry(
       this.params.particleSize,
       this.params.particleSize
@@ -36,12 +35,28 @@ export class SnowSystem extends BaseObject {
 
     // Particle data
     this.particles = [];
-    const dummy = new THREE.Object3D();
+
+    // === Optimization: Pre-allocate reusable objects ===
+    // These objects are reused every frame to avoid Garbage Collection (GC)
+    this._dummy = new THREE.Object3D();
+    this._tempPos = new THREE.Vector3();
+    this._inertiaForce = new THREE.Vector3();
+    this._cameraRight = new THREE.Vector3();
+    this._cameraUp = new THREE.Vector3();
+
+    // Window interaction reusable vectors
+    this._lastScreenPos = new THREE.Vector2();
+    this._lastWindowSize = new THREE.Vector2();
+    this._currentScreenPos = new THREE.Vector2();
+    this._currentWindowSize = new THREE.Vector2();
+    this._deltaMove = new THREE.Vector2();
+
+    this._hasInitWindow = false;
 
     for (let i = 0; i < this.count; i++) {
       const particle = this.generateParticle({}, true);
       this.particles.push(particle);
-      this.updateParticleMatrix(i, particle, dummy);
+      this.updateParticleMatrix(i, particle, this._dummy);
     }
 
     this.mesh.instanceMatrix.needsUpdate = true;
@@ -51,11 +66,7 @@ export class SnowSystem extends BaseObject {
   generateParticle(p, initial = false) {
     const { sphereRadius, sphereCenter, particleSpeed } = this.params;
 
-    // position generate
-    // sphereCenter + random_in_radius
-    // If NOT initial, we prefer them to spawn at the top of the sphere to fall down,
-
-    let pos = new THREE.Vector3();
+    let pos = p.position || new THREE.Vector3();
 
     if (initial) {
       // Uniform random point inside sphere
@@ -69,20 +80,14 @@ export class SnowSystem extends BaseObject {
         r * Math.sin(phi) * Math.sin(theta)
       );
     } else {
-      // spawn them in the top 20% of the sphere volume for continuity
-      // y range: [sphereRadius * 0.8, sphereRadius]
-      // But we must respect the spherical boundary at that Y
-
+      // spawn them in the top 20% of the sphere volume
       const rVal = sphereRadius;
-      // height from center
-      const yMin = rVal * 0.5; // start showing up from half way up
-      const yMax = rVal * 0.95; // don't spawn perfectly at edge to avoid clipping instantly
+      const yMin = rVal * 0.5;
+      const yMax = rVal * 0.95;
 
       const y = yMin + Math.random() * (yMax - yMin);
-
-      // At height y, the max radius is sqrt(R^2 - y^2)
       const maxR = Math.sqrt(rVal * rVal - y * y);
-      const rDisk = Math.sqrt(Math.random()) * maxR; // Uniform disk distribution
+      const rDisk = Math.sqrt(Math.random()) * maxR;
       const angle = Math.random() * 2 * Math.PI;
 
       pos.set(rDisk * Math.cos(angle), y, rDisk * Math.sin(angle));
@@ -93,25 +98,34 @@ export class SnowSystem extends BaseObject {
     p.position = pos;
 
     // velocity
-    // Falling down (-y) with some sway
     const speed = particleSpeed;
-    p.velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * speed * 0.5, // sway X
-      -(speed + Math.random() * speed * 0.5), // Fall Y
-      (Math.random() - 0.5) * speed * 0.5 // Sway Z
+    // We can reuse p.velocity if it exists
+    if (!p.velocity) p.velocity = new THREE.Vector3();
+
+    p.velocity.set(
+      (Math.random() - 0.5) * speed * 0.5,
+      -(speed + Math.random() * speed * 0.5),
+      (Math.random() - 0.5) * speed * 0.5
     );
 
     // rotation
-    p.rotation = new THREE.Euler(
+    if (!p.rotation) p.rotation = new THREE.Euler();
+    p.rotation.set(
       Math.random() * Math.PI,
       Math.random() * Math.PI,
       Math.random() * Math.PI
     );
-    p.rotSpeed = new THREE.Euler(
+
+    if (!p.rotSpeed) p.rotSpeed = new THREE.Euler();
+    p.rotSpeed.set(
       (Math.random() - 0.5) * 0.1,
       (Math.random() - 0.5) * 0.1,
       (Math.random() - 0.5) * 0.1
     );
+
+    // Reset inertia
+    if (!p.inertialVelocity) p.inertialVelocity = new THREE.Vector3();
+    p.inertialVelocity.set(0, 0, 0);
 
     return p;
   }
@@ -119,6 +133,7 @@ export class SnowSystem extends BaseObject {
   updateParticleMatrix(i, p, dummy) {
     dummy.position.copy(p.position);
     dummy.rotation.copy(p.rotation);
+    // Scale is implicitly 1,1,1
     dummy.updateMatrix();
     this.mesh.setMatrixAt(i, dummy.matrix);
   }
@@ -131,9 +146,11 @@ export class SnowSystem extends BaseObject {
     }
 
     const { sphereRadius, sphereCenter } = this.params;
-    const dummy = new THREE.Object3D();
     const radiusSq = sphereRadius * sphereRadius;
 
+    // --- Window Drag Logic (Optimized) ---
+    /* 
+    // OLD LOGIC (Commented out for performance)
     // window drag
     if (!this.lastScreenPos) {
       this.lastScreenPos = new THREE.Vector2(window.screenX, window.screenY);
@@ -162,42 +179,82 @@ export class SnowSystem extends BaseObject {
     // Update history
     this.lastScreenPos.copy(currentScreenPos);
     this.lastWindowSize.copy(currentWindowSize);
-    // Map: Screen Space Delta -> World Space Force
-    // Screen X+ is Right, Screen Y+ is Down
-    // We want:
-    //  Screen Right -> Camera Right
-    //  Screen Down  -> Camera Down (World -Y relative to camera if camera was upright, but generally Camera's local -Y in view space, or simply -CameraUp in World Space)
-    // "Screen Down" roughly corresponds to "Camera Down" vector in world space.
+    */
 
-    // Let's get camera basis vectors in World Space
-    // default camera is optional in signature, make sure we have it
-    const camera = arguments[1]; // Or change signature to update(time, camera)
+    // Safely check for window properties to avoid crashes on mobile/iframe
+    const screenX = typeof window.screenX === "number" ? window.screenX : 0;
+    const screenY = typeof window.screenY === "number" ? window.screenY : 0;
+    const outerW = window.outerWidth || window.innerWidth;
+    const outerH = window.outerHeight || window.innerHeight;
 
-    // Fallback if camera not passed (though we added it to main.js)
-    let cameraRight = new THREE.Vector3(1, 0, 0);
-    let cameraUp = new THREE.Vector3(0, 1, 0);
-
-    if (camera && camera.isCamera) {
-      // Construct basis from camera rotation
-      const matrix = new THREE.Matrix4().extractRotation(camera.matrixWorld);
-
-      // Column 0 is Right, Column 1 is Up, Column 2 is -Forward
-      cameraRight.setFromMatrixColumn(matrix, 0);
-      cameraUp.setFromMatrixColumn(matrix, 1);
+    if (!this._hasInitWindow) {
+      this._lastScreenPos.set(screenX, screenY);
+      this._lastWindowSize.set(outerW, outerH);
+      this._hasInitWindow = true;
     }
 
+    this._currentScreenPos.set(screenX, screenY);
+    this._currentWindowSize.set(outerW, outerH);
+
+    // Reset delta
+    this._deltaMove.set(0, 0);
+
+    // Only calculate inertia if window size hasn't changed (ignore resize events)
+    // And ensure coordinates are valid numbers (not NaN)
+    const isValid = !isNaN(screenX) && !isNaN(screenY);
+    const isSameSize =
+      this._currentWindowSize.x === this._lastWindowSize.x &&
+      this._currentWindowSize.y === this._lastWindowSize.y;
+
+    if (isValid && isSameSize) {
+      this._deltaMove.subVectors(this._currentScreenPos, this._lastScreenPos);
+    }
+
+    // Update history
+    this._lastScreenPos.copy(this._currentScreenPos);
+    this._lastWindowSize.copy(this._currentWindowSize);
+
+    // --- Camera Basis Calculation ---
+    const camera = arguments[1]; // Expected to be passed from main.js
+
+    this._cameraRight.set(1, 0, 0);
+    this._cameraUp.set(0, 1, 0);
+
+    if (camera && camera.isCamera) {
+      // Re-use logic: extractRotation avoids creating new Matrix4 if we trust camera.matrixWorld
+      // But extractRotation returns a new Matrix4.
+      // Better: access elements directly or use a shared matrix if extremely critical.
+      // For now, let's just use the camera's world direction vectors simpler.
+
+      // Standard way without generating garbage every frame:
+      // We can interpret the rotation matrix columns directly.
+      const e = camera.matrixWorld.elements;
+      // Column 0: Right (x, y, z) -> elements[0], elements[1], elements[2]
+      this._cameraRight.set(e[0], e[1], e[2]);
+      // Column 1: Up (x, y, z)    -> elements[4], elements[5], elements[6]
+      this._cameraUp.set(e[4], e[5], e[6]);
+    }
+
+    // Calculate Inertia Force
     const conversionFactor = 0.0003;
 
-    // deltaMove.x (Right) * CameraRight
-    // deltaMove.y (Down)  * -CameraUp  (because deltaMove.y is positive DOWN, we want vector pointing DOWN)
+    // this._inertiaForce = (Right * delta.x) + (Up * -delta.y)
+    this._inertiaForce.set(0, 0, 0);
+    this._inertiaForce.addScaledVector(
+      this._cameraRight,
+      this._deltaMove.x * conversionFactor
+    );
+    this._inertiaForce.addScaledVector(
+      this._cameraUp,
+      -this._deltaMove.y * conversionFactor
+    );
 
-    const inertiaForce = new THREE.Vector3();
-    inertiaForce.addScaledVector(cameraRight, deltaMove.x * conversionFactor);
-    inertiaForce.addScaledVector(cameraUp, -deltaMove.y * conversionFactor);
-
-    // Temp vector for distance check
-    const tempPos = new THREE.Vector3();
-
+    // --- Particle Loop ---
+    /*
+    // OLD LOOP (Commented out for performance)
+    const dummy = new THREE.Object3D(); // Created locally in old version
+    const tempPos = new THREE.Vector3(); // Created locally in old version
+    
     for (let i = 0; i < this.count; i++) {
       const p = this.particles[i];
 
@@ -205,12 +262,12 @@ export class SnowSystem extends BaseObject {
       if (!p.inertialVelocity) p.inertialVelocity = new THREE.Vector3();
 
       // Apply new inertia
-      p.inertialVelocity.add(inertiaForce);
+      p.inertialVelocity.add(inertiaForce); // Note: inertiaForce was calculated locally
 
       // Damp existing inertia
       p.inertialVelocity.multiplyScalar(0.95);
 
-      // Total velocity for this frame
+      // Total velocity for this frame (HIGH GC HEAVY)
       const totalVelocity = p.velocity.clone().add(p.inertialVelocity);
 
       // Move
@@ -236,6 +293,38 @@ export class SnowSystem extends BaseObject {
 
       this.updateParticleMatrix(i, p, dummy);
     }
+    */
+
+    for (let i = 0; i < this.count; i++) {
+      const p = this.particles[i];
+
+      // Apply Inertia
+      // p.inertialVelocity += inertiaForce
+      p.inertialVelocity.add(this._inertiaForce);
+
+      // Damping
+      p.inertialVelocity.multiplyScalar(0.95);
+
+      // Move: position += velocity + inertialVelocity
+      // To avoid allocating a new 'totalVelocity' vector, we add them sequentially
+      p.position.add(p.velocity);
+      p.position.add(p.inertialVelocity);
+
+      // Rotate
+      p.rotation.x += p.rotSpeed.x;
+      p.rotation.y += p.rotSpeed.y;
+      p.rotation.z += p.rotSpeed.z;
+
+      // Boundary Check
+      this._tempPos.copy(p.position).sub(sphereCenter);
+
+      if (this._tempPos.lengthSq() > radiusSq) {
+        this.generateParticle(p);
+      }
+
+      this.updateParticleMatrix(i, p, this._dummy);
+    }
+
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 }

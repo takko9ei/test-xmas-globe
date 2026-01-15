@@ -18,9 +18,14 @@ const camera = new THREE.PerspectiveCamera(
   100
 );
 camera.position.z = 5;
+const isMobile =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+const maxPixelRatio = isMobile ? 1.5 : 2.0;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(2.0);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
 document.body.appendChild(renderer.domElement);
 
 // Handle window resize to keep canvas centered and responsive

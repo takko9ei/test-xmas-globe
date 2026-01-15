@@ -251,7 +251,7 @@ export class SnowSystem extends BaseObject {
 
     // --- Particle Loop ---
     /*
-    // OLD LOOP (Commented out for performance)
+    // old loop(massive GC)
     const dummy = new THREE.Object3D(); // Created locally in old version
     const tempPos = new THREE.Vector3(); // Created locally in old version
     

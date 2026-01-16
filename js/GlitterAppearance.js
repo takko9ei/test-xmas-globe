@@ -5,14 +5,22 @@ import * as THREE from "three";
 // As for now, the shining effect is only a simple product with view dir
 // Now, the effects not fit the lighting effect of other models verywell(if you see the rendered result, you may find a little weird)
 
+const textureCache = {};
+
 export function createGlitterMaterial(options = {}) {
   const color = options.color || new THREE.Color(0xffffff);
+  const size = options.size || 128;
+  const cacheKey = size;
 
-  // Procedurally draw a snowflake into a canvas and use it as an alpha sprite texture
-  const snowTex = createSnowflakeTexture(128);
-  snowTex.colorSpace = THREE.SRGBColorSpace;
-  snowTex.wrapS = THREE.ClampToEdgeWrapping;
-  snowTex.wrapT = THREE.ClampToEdgeWrapping;
+  let snowTex = textureCache[cacheKey];
+  if (!snowTex) {
+    // Procedurally draw a snowflake into a canvas and use it as an alpha sprite texture
+    snowTex = createSnowflakeTexture(size);
+    snowTex.colorSpace = THREE.SRGBColorSpace;
+    snowTex.wrapS = THREE.ClampToEdgeWrapping;
+    snowTex.wrapT = THREE.ClampToEdgeWrapping;
+    textureCache[cacheKey] = snowTex;
+  }
 
   return new THREE.MeshBasicMaterial({
     color: color,

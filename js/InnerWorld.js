@@ -11,34 +11,31 @@ export class InnerWorld extends BaseObject {
   _deco = null;           // decoration group attached to tree
   _swing = [];            // swingable objects
 
-  // timing
-  _clock = null;
-  _rafId = null;
-  _rafRunning = false;
-
   init() {
     console.log("InnerWorld: loading...");
 
-
     try {
-
-      // reset
-      this.tree = null;
-      this._leafMat = null;
-      this._noiseTex = null;
-      this._deco = null;
-      this._swing = [];
-
-      // time driver (works even if external loop doesn't call update)
-      this._clock = new THREE.Clock();
-      if (this._rafId != null) cancelAnimationFrame(this._rafId);
-      this._rafRunning = true;
-      const tick = () => {
-        if (!this._rafRunning || !this._clock) return;
-        this.update(this._clock.getElapsedTime());
-        this._rafId = requestAnimationFrame(tick);
+      this.params = {
+        tree: {
+          position: new THREE.Vector3(0, -0.06, 0),
+          scale: new THREE.Vector3(1, 1, 1),
+        },
+        ground: {
+          position: new THREE.Vector3(0, 0, 0),
+          scale: new THREE.Vector3(1, 1, 1),
+        },
+        snowman: {
+          scale: 1.0,
+          positionOffset: new THREE.Vector3(0, 0, 0),
+        },
+        cabin: {
+          scale: 1.0,
+          positionOffset: new THREE.Vector3(0, 0, 0),
+        },
+        decorations: {
+          starEnabled: false,
+        }
       };
-      this._rafId = requestAnimationFrame(tick);
 
       const loader = new GLTFLoader();
       const texLoader = new THREE.TextureLoader();
@@ -185,19 +182,7 @@ export class InnerWorld extends BaseObject {
       // Fallback material: used if shader material isn't ready or any decoration step fails
       const fallbackTreeMat = new THREE.MeshStandardMaterial({ color: 0x2b6a3a, roughness: 0.9, metalness: 0.0 });
 
-      const installPerMeshHook = (root) => {
-        if (!root) return;
-        root.traverse((o) => {
-          if (!o || !o.isMesh) return;
-          if (!o.userData) o.userData = {};
-          if (o.userData.__iwHook) return;
-          o.userData.__iwHook = true;
-          o.onBeforeRender = () => {
-            if (!this._clock) return;
-            this.update(this._clock.getElapsedTime());
-          };
-        });
-      };
+
 
       // 1) Load Tree (try edited tree first, then fallback)
       const loadTree = (url) => {
@@ -206,7 +191,8 @@ export class InnerWorld extends BaseObject {
           (gltf) => {
             try {
               const tree = gltf.scene;
-              tree.position.set(0, -0.06, 0);
+              tree.position.copy(this.params.tree.position);
+              tree.scale.copy(this.params.tree.scale);
 
               // Remove any baked-in ornaments/balls from the GLB so our scene stays consistent.
               const removeBuiltinOrnaments = () => {
@@ -305,7 +291,8 @@ export class InnerWorld extends BaseObject {
               }
 
               this.tree = tree;
-              installPerMeshHook(tree);
+              this.tree = tree;
+              // installPerMeshHook(tree);
 
               // Decorations (Role B): star + ribbon + ornaments + snowman + cabin
               try {
@@ -347,7 +334,9 @@ export class InnerWorld extends BaseObject {
         (gltf) => {
           const ground = gltf.scene;
           // Do NOT remove the debug placeholder here; only remove when tree loads.
-          installPerMeshHook(ground);
+          // installPerMeshHook(ground);
+          ground.position.copy(this.params.ground.position);
+          ground.scale.copy(this.params.ground.scale);
           this.add(ground);
           console.log("InnerWorld: ground loaded.");
         },
@@ -401,7 +390,6 @@ export class InnerWorld extends BaseObject {
       obj.userData.__seed = opts.seed ?? Math.random() * 1000;
     };
 
-    // --- Big top star (extruded) ---
     const makeStarShape = (outerR, innerR) => {
       const shape = new THREE.Shape();
       const spikes = 5;
@@ -418,28 +406,32 @@ export class InnerWorld extends BaseObject {
       return shape;
     };
 
-    const starGeo = new THREE.ExtrudeGeometry(makeStarShape(0.060, 0.028), {
-      depth: 0.018,
-      bevelEnabled: true,
-      bevelSize: 0.004,
-      bevelThickness: 0.004,
-      bevelSegments: 1,
-    });
+    // --- Big top star (extruded) ---
+    if (this.params.decorations.starEnabled) {
 
-    const starMat = new THREE.MeshStandardMaterial({
-      color: 0xffd26a,
-      emissive: 0xffc24a,
-      emissiveIntensity: 0.55,
-      roughness: 0.35,
-      metalness: 0.2,
-    });
+      const starGeo = new THREE.ExtrudeGeometry(makeStarShape(0.060, 0.028), {
+        depth: 0.018,
+        bevelEnabled: true,
+        bevelSize: 0.004,
+        bevelThickness: 0.004,
+        bevelSegments: 1,
+      });
 
-    const star = new THREE.Mesh(starGeo, starMat);
-    star.position.set(0, center.y + treeH / 2 - 0.085, 0);
-    star.rotation.x = Math.PI / 2;
-    star.castShadow = true;
-    markSwing(star, { amp: 1.6, speed: 1.0 });
-    this._deco.add(star);
+      const starMat = new THREE.MeshStandardMaterial({
+        color: 0xffd26a,
+        emissive: 0xffc24a,
+        emissiveIntensity: 0.55,
+        roughness: 0.35,
+        metalness: 0.2,
+      });
+
+      const star = new THREE.Mesh(starGeo, starMat);
+      star.position.set(0, center.y + treeH / 2 - 0.085, 0);
+      star.rotation.x = Math.PI / 2;
+      star.castShadow = true;
+      markSwing(star, { amp: 1.6, speed: 1.0 });
+      this._deco.add(star);
+    }
 
     // --- Ribbon (tube around the tree) ---
     const ribbonTurns = 3.2;

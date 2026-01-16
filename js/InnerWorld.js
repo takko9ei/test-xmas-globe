@@ -379,7 +379,10 @@ export class InnerWorld extends BaseObject {
   }
 
   _buildDecorations(tree, treeWorldBox) {
-    if (this._deco) tree.remove(this._deco);
+    if (this._deco) {
+      this._disposeNode(this._deco);
+      tree.remove(this._deco);
+    }
     this._deco = new THREE.Group();
     this._deco.renderOrder = 10;
     this._swing = [];
@@ -837,5 +840,22 @@ export class InnerWorld extends BaseObject {
       obj.rotation.y += ry;
       obj.rotation.z += rz;
     }
+  }
+
+  // Recursive dispose helper
+  _disposeNode(node) {
+    if (!node) return;
+    node.traverse((child) => {
+      if (child.isMesh) {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach((m) => m && m.dispose());
+          } else {
+            child.material.dispose();
+          }
+        }
+      }
+    });
   }
 }

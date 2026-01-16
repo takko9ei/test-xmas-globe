@@ -17,20 +17,23 @@ export class InnerWorld extends BaseObject {
     try {
       this.params = {
         tree: {
-          position: new THREE.Vector3(0, -0.06, 0),
-          scale: new THREE.Vector3(1, 1, 1),
+          position: new THREE.Vector3(-0.03, -0.06, -0.18),
+          scale: new THREE.Vector3(1.0, 1.0, 1.0),
+          rotationY: Math.PI / 2,
         },
         ground: {
           position: new THREE.Vector3(0, 0, 0),
           scale: new THREE.Vector3(1, 1, 1),
         },
         snowman: {
-          scale: 1.0,
-          positionOffset: new THREE.Vector3(0, 0, 0),
+          scale: 2.0,
+          position: new THREE.Vector3(-0.35, -0.42, 0.27),
+          rotationY: (Math.PI / 180) * -10,
         },
         cabin: {
-          scale: 1.0,
-          positionOffset: new THREE.Vector3(0, 0, 0),
+          scale: 3.0,
+          position: new THREE.Vector3(0.30, -0.35, 0.27),
+          rotationY: (Math.PI / 180) * 35,
         },
         decorations: {
           starEnabled: false,
@@ -219,6 +222,7 @@ export class InnerWorld extends BaseObject {
               const tree = gltf.scene;
               tree.position.copy(this.params.tree.position);
               tree.scale.copy(this.params.tree.scale);
+              tree.rotation.y = this.params.tree.rotationY;
 
               // Remove any baked-in ornaments/balls from the GLB so our scene stays consistent.
               const removeBuiltinOrnaments = () => {
@@ -721,36 +725,12 @@ export class InnerWorld extends BaseObject {
     snowman.add(body, head, cone, eyeL, eyeR, nose);
     snowman.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
 
-    // Scale to about half tree height
-    const baseH = 0.20;
-    const targetH = treeH * 0.50;
-    const sSnow = THREE.MathUtils.clamp(targetH / baseH, 1.4, 2.8);
-    snowman.scale.set(sSnow, sSnow, sSnow);
+    // Manual placement from params
+    const pSnow = this.params.snowman;
+    snowman.scale.set(pSnow.scale, pSnow.scale, pSnow.scale);
+    snowman.position.copy(pSnow.position);
+    snowman.rotation.y = pSnow.rotationY;
 
-    // Place using world bounds (sit on snow surface)
-    const ySnow = treeWorldBox.min.y + Math.min(0.03, treeH * 0.06);
-    const treeW = new THREE.Vector3();
-    tree.getWorldPosition(treeW);
-    const placeR = Math.min(treeR * 1.85, 0.62);
-
-    // Rotate placement 90° clockwise around the tree center (world Y axis)
-    const ROT_CW_90 = -Math.PI / 2;
-    const rotAroundTree = (x, z) => {
-      const dx = x - treeW.x;
-      const dz = z - treeW.z;
-      const c = Math.cos(ROT_CW_90);
-      const s = Math.sin(ROT_CW_90);
-      return {
-        x: treeW.x + (dx * c - dz * s),
-        z: treeW.z + (dx * s + dz * c),
-      };
-    };
-
-    // Original intent: snowman on +X side of tree; rotate that placement clockwise
-    const snowXZ = rotAroundTree(treeW.x + placeR, treeW.z);
-    snowman.position.set(snowXZ.x, ySnow + (0.060 * sSnow) - 0.28, snowXZ.z);
-    // Front is modeled along +Z (nose points +Z), face the same direction as the viewer
-    snowman.rotation.y = ROT_CW_90;
     this.add(snowman);
 
     // --- Tiny cabin (opposite side) ---
@@ -782,17 +762,13 @@ export class InnerWorld extends BaseObject {
     cabin.add(base, roof, winL, winR, chim);
     cabin.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
 
-    const sCab = sSnow * 0.92;
-    cabin.scale.set(sCab, sCab, sCab);
-    // Original intent: cabin on -X side of tree; rotate that placement clockwise
-    const cabXZ = rotAroundTree(treeW.x - placeR, treeW.z);
-    cabin.position.set(cabXZ.x, ySnow - 0.055, cabXZ.z);
-    // Keep its facing consistent with the rotated layout
-    cabin.rotation.y = (Math.PI / 2) + ROT_CW_90;
-    this.add(cabin);
+    // Manual placement from params
+    const pCab = this.params.cabin;
+    cabin.scale.set(pCab.scale, pCab.scale, pCab.scale);
+    cabin.position.copy(pCab.position);
+    cabin.rotation.y = pCab.rotationY;
 
-    // Front is modeled along +Z (windows/door on +Z), face the same direction as the viewer
-    cabin.rotation.y = ROT_CW_90;
+    this.add(cabin);
 
     // collect swingables and cache base transforms
     this._deco.traverse((obj) => {
@@ -815,9 +791,16 @@ export class InnerWorld extends BaseObject {
 
     // tiny tree sway (safe)
     if (this.tree) {
-      this.tree.rotation.z = 0.035 * Math.sin(t * 0.9);
+      // Rotation: Sway X/Z, but keep Y manually controlled
       this.tree.rotation.x = 0.012 * Math.sin(t * 0.6 + 1.0);
-      this.tree.position.x = 0.004 * Math.sin(t * 0.4);
+      this.tree.rotation.z = 0.035 * Math.sin(t * 0.9);
+      if (this.params.tree.rotationY !== undefined) {
+        this.tree.rotation.y = this.params.tree.rotationY;
+      }
+
+      // Position: Sway X relative to base position
+      this.tree.position.copy(this.params.tree.position);
+      this.tree.position.x += 0.004 * Math.sin(t * 0.4);
     }
 
     // decoration swing

@@ -28,7 +28,11 @@ export class GlobeGlass extends BaseObject {
               envMapIntensity: 1.5, // enhance reflection
               attenuationColor: new THREE.Color(0xefefff), // 极淡的蓝
               attenuationDistance: 0.8,
+              transparent: true,
+              depthWrite: false,
+              depthTest: true,
             });
+            child.renderOrder = 100;
           }
         });
 

@@ -11,23 +11,21 @@ export class SnowSystem extends BaseObject {
       sphereRadius: 0.95,
       sphereCenter: new THREE.Vector3(0, 0, 0),
       particleSpeed: 0.003,
-      particleSize: 0.012,
+      particleSize: 0.020,
       color: new THREE.Color(0xffffff),
       brightness: 1.9,
     };
 
     this.count = 1500;
 
-    // Use dynamic geometry based on particleSize
+    // Use a plane, but with a snowflake alpha texture so the visible shape is ❄️ (not a square)
     const geometry = new THREE.PlaneGeometry(
       this.params.particleSize,
       this.params.particleSize
     );
 
-    this.material = createGlitterMaterial({
-      color: this.params.color,
-      brightness: this.params.brightness,
-    });
+    // Use centralized material definition
+    this.material = createGlitterMaterial({ color: this.params.color });
 
     this.mesh = new THREE.InstancedMesh(geometry, this.material, this.count);
     this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -60,7 +58,9 @@ export class SnowSystem extends BaseObject {
     }
 
     this.mesh.instanceMatrix.needsUpdate = true;
+    this._snowflakeTexture = this.material.map;
   }
+
 
   // Generate a particle inside hard-defined sphere
   generateParticle(p, initial = false) {
@@ -133,7 +133,10 @@ export class SnowSystem extends BaseObject {
   updateParticleMatrix(i, p, dummy) {
     dummy.position.copy(p.position);
     dummy.rotation.copy(p.rotation);
-    // Scale is implicitly 1,1,1
+
+    // Slight scale boost for better visibility
+    dummy.scale.setScalar(1.2);
+
     dummy.updateMatrix();
     this.mesh.setMatrixAt(i, dummy.matrix);
   }
@@ -141,9 +144,6 @@ export class SnowSystem extends BaseObject {
   update(time) {
     if (!this.mesh) return;
 
-    if (this.material.uniforms) {
-      this.material.uniforms.time.value = time;
-    }
 
     const { sphereRadius, sphereCenter } = this.params;
     const radiusSq = sphereRadius * sphereRadius;

@@ -22,63 +22,63 @@ export class InnerWorld extends BaseObject {
 
     try {
 
-    // reset
-    this.tree = null;
-    this._leafMat = null;
-    this._noiseTex = null;
-    this._deco = null;
-    this._swing = [];
+      // reset
+      this.tree = null;
+      this._leafMat = null;
+      this._noiseTex = null;
+      this._deco = null;
+      this._swing = [];
 
-    // time driver (works even if external loop doesn't call update)
-    this._clock = new THREE.Clock();
-    if (this._rafId != null) cancelAnimationFrame(this._rafId);
-    this._rafRunning = true;
-    const tick = () => {
-      if (!this._rafRunning || !this._clock) return;
-      this.update(this._clock.getElapsedTime());
+      // time driver (works even if external loop doesn't call update)
+      this._clock = new THREE.Clock();
+      if (this._rafId != null) cancelAnimationFrame(this._rafId);
+      this._rafRunning = true;
+      const tick = () => {
+        if (!this._rafRunning || !this._clock) return;
+        this.update(this._clock.getElapsedTime());
+        this._rafId = requestAnimationFrame(tick);
+      };
       this._rafId = requestAnimationFrame(tick);
-    };
-    this._rafId = requestAnimationFrame(tick);
 
-    const loader = new GLTFLoader();
-    const texLoader = new THREE.TextureLoader();
+      const loader = new GLTFLoader();
+      const texLoader = new THREE.TextureLoader();
 
-    // --- tiny procedural noise texture for micro-detail (no new assets) ---
-    const makeNoiseTex = (size = 128) => {
-      const data = new Uint8Array(size * size * 4);
-      for (let i = 0; i < size * size; i++) {
-        const v = 140 + Math.floor((Math.random() - 0.5) * 80);
-        const o = i * 4;
-        data[o] = data[o + 1] = data[o + 2] = v;
-        data[o + 3] = 255;
-      }
-      const t = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.repeat.set(6, 6);
-      t.needsUpdate = true;
-      return t;
-    };
+      // --- tiny procedural noise texture for micro-detail (no new assets) ---
+      const makeNoiseTex = (size = 128) => {
+        const data = new Uint8Array(size * size * 4);
+        for (let i = 0; i < size * size; i++) {
+          const v = 140 + Math.floor((Math.random() - 0.5) * 80);
+          const o = i * 4;
+          data[o] = data[o + 1] = data[o + 2] = v;
+          data[o + 3] = 255;
+        }
+        const t = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+        t.wrapS = t.wrapT = THREE.RepeatWrapping;
+        t.repeat.set(6, 6);
+        t.needsUpdate = true;
+        return t;
+      };
 
-    // --- stylized foliage shader: vertical gradient + rim + noise + wind sway ---
-    const makeLeafMat = (mapTex, noiseTex) =>
-      new THREE.ShaderMaterial({
-        uniforms: {
-          uMap: { value: mapTex },
-          uNoise: { value: noiseTex },
-          uTime: { value: 0.0 },
-          uTop: { value: new THREE.Color(0x7cffb2) },
-          uBot: { value: new THREE.Color(0x052010) },
-          uPower: { value: 2.4 },
-          uEdge: { value: new THREE.Color(0x86ffb6) },
-          uEdgeI: { value: 0.85 },
-          uNoiseScale: { value: 2.4 },
-          uNoiseStr: { value: 0.035 },
-          uWindStr: { value: 0.9 },
-          uWindFreq: { value: 0.8 },
-          uMinY: { value: -0.2 },
-          uMaxY: { value: 0.8 },
-        },
-        vertexShader: `
+      // --- stylized foliage shader: vertical gradient + rim + noise + wind sway ---
+      const makeLeafMat = (mapTex, noiseTex) =>
+        new THREE.ShaderMaterial({
+          uniforms: {
+            uMap: { value: mapTex },
+            uNoise: { value: noiseTex },
+            uTime: { value: 0.0 },
+            uTop: { value: new THREE.Color(0x7cffb2) },
+            uBot: { value: new THREE.Color(0x052010) },
+            uPower: { value: 2.4 },
+            uEdge: { value: new THREE.Color(0x86ffb6) },
+            uEdgeI: { value: 0.85 },
+            uNoiseScale: { value: 2.4 },
+            uNoiseStr: { value: 0.035 },
+            uWindStr: { value: 0.9 },
+            uWindFreq: { value: 0.8 },
+            uMinY: { value: -0.2 },
+            uMaxY: { value: 0.8 },
+          },
+          vertexShader: `
           uniform float uTime;
           uniform float uWindStr;
           uniform float uWindFreq;
@@ -104,7 +104,7 @@ export class InnerWorld extends BaseObject {
             gl_Position = projectionMatrix * viewMatrix * wpos;
           }
         `,
-        fragmentShader: `
+          fragmentShader: `
           uniform sampler2D uMap;
           uniform sampler2D uNoise;
           uniform vec3 uTop;
@@ -159,198 +159,201 @@ export class InnerWorld extends BaseObject {
 
             vec3 col = min(base + edge1 + edge2 + edge3, vec3(1.0));
             gl_FragColor = vec4(col, 1.0);
+
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
           }
         `,
-        side: THREE.DoubleSide,
-        depthTest: true,
-        depthWrite: true,
-      });
+          side: THREE.DoubleSide,
+          depthTest: true,
+          depthWrite: true,
+        });
 
-    // Texture
-    const treeTex = texLoader.load("./assets/textures/xmas_tree.jpeg");
-    treeTex.flipY = false;
-    // three.js version compatibility: newer uses colorSpace, older uses encoding
-    if ("colorSpace" in treeTex && THREE.SRGBColorSpace) {
-      treeTex.colorSpace = THREE.SRGBColorSpace;
-    } else {
-      treeTex.encoding = THREE.sRGBEncoding;
-    }
+      // Texture
+      const treeTex = texLoader.load("./assets/textures/xmas_tree.jpeg");
+      treeTex.flipY = false;
+      // three.js version compatibility: newer uses colorSpace, older uses encoding
+      if ("colorSpace" in treeTex && THREE.SRGBColorSpace) {
+        treeTex.colorSpace = THREE.SRGBColorSpace;
+      } else {
+        treeTex.encoding = THREE.sRGBEncoding;
+      }
 
-    this._noiseTex = makeNoiseTex(128);
-    this._leafMat = makeLeafMat(treeTex, this._noiseTex);
+      this._noiseTex = makeNoiseTex(128);
+      this._leafMat = makeLeafMat(treeTex, this._noiseTex);
 
-    // Fallback material: used if shader material isn't ready or any decoration step fails
-    const fallbackTreeMat = new THREE.MeshStandardMaterial({ color: 0x2b6a3a, roughness: 0.9, metalness: 0.0 });
+      // Fallback material: used if shader material isn't ready or any decoration step fails
+      const fallbackTreeMat = new THREE.MeshStandardMaterial({ color: 0x2b6a3a, roughness: 0.9, metalness: 0.0 });
 
-    const installPerMeshHook = (root) => {
-      if (!root) return;
-      root.traverse((o) => {
-        if (!o || !o.isMesh) return;
-        if (!o.userData) o.userData = {};
-        if (o.userData.__iwHook) return;
-        o.userData.__iwHook = true;
-        o.onBeforeRender = () => {
-          if (!this._clock) return;
-          this.update(this._clock.getElapsedTime());
-        };
-      });
-    };
+      const installPerMeshHook = (root) => {
+        if (!root) return;
+        root.traverse((o) => {
+          if (!o || !o.isMesh) return;
+          if (!o.userData) o.userData = {};
+          if (o.userData.__iwHook) return;
+          o.userData.__iwHook = true;
+          o.onBeforeRender = () => {
+            if (!this._clock) return;
+            this.update(this._clock.getElapsedTime());
+          };
+        });
+      };
 
-    // 1) Load Tree (try edited tree first, then fallback)
-    const loadTree = (url) => {
-      loader.load(
-        url,
-        (gltf) => {
-          try {
-            const tree = gltf.scene;
-            tree.position.set(0, -0.06, 0);
+      // 1) Load Tree (try edited tree first, then fallback)
+      const loadTree = (url) => {
+        loader.load(
+          url,
+          (gltf) => {
+            try {
+              const tree = gltf.scene;
+              tree.position.set(0, -0.06, 0);
 
-            // Remove any baked-in ornaments/balls from the GLB so our scene stays consistent.
-            const removeBuiltinOrnaments = () => {
-              const toRemove = [];
-              tree.traverse((obj) => {
-                if (!obj || !obj.isMesh) return;
-                const name = (typeof obj.name === "string") ? obj.name.toLowerCase() : "";
-                const nameHit = /ball|bauble|ornament|orn|sphere|deco|decoration/.test(name);
+              // Remove any baked-in ornaments/balls from the GLB so our scene stays consistent.
+              const removeBuiltinOrnaments = () => {
+                const toRemove = [];
+                tree.traverse((obj) => {
+                  if (!obj || !obj.isMesh) return;
+                  const name = (typeof obj.name === "string") ? obj.name.toLowerCase() : "";
+                  const nameHit = /ball|bauble|ornament|orn|sphere|deco|decoration/.test(name);
 
-                // Size heuristic: small-ish meshes are likely ornaments (tree itself is much larger)
-                let smallHit = false;
-                if (obj.geometry) {
-                  if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
-                  if (obj.geometry.boundingBox) {
-                    const bb = obj.geometry.boundingBox;
-                    const sx = bb.max.x - bb.min.x;
-                    const sy = bb.max.y - bb.min.y;
-                    const sz = bb.max.z - bb.min.z;
-                    const maxDim = Math.max(sx, sy, sz);
-                    smallHit = maxDim > 0.0 && maxDim < 0.10;
+                  // Size heuristic: small-ish meshes are likely ornaments (tree itself is much larger)
+                  let smallHit = false;
+                  if (obj.geometry) {
+                    if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
+                    if (obj.geometry.boundingBox) {
+                      const bb = obj.geometry.boundingBox;
+                      const sx = bb.max.x - bb.min.x;
+                      const sy = bb.max.y - bb.min.y;
+                      const sz = bb.max.z - bb.min.z;
+                      const maxDim = Math.max(sx, sy, sz);
+                      smallHit = maxDim > 0.0 && maxDim < 0.10;
+                    }
+                  }
+
+                  if (nameHit && smallHit) toRemove.push(obj);
+                });
+
+                for (const m of toRemove) {
+                  if (m.parent) m.parent.remove(m);
+                  if (m.geometry) m.geometry.dispose();
+                  if (m.material) {
+                    if (Array.isArray(m.material)) m.material.forEach((mm) => mm.dispose());
+                    else m.material.dispose();
                   }
                 }
+                if (toRemove.length) console.log(`InnerWorld: removed ${toRemove.length} baked-in ornament mesh(es) from GLB.`);
+              };
+              removeBuiltinOrnaments();
 
-                if (nameHit && smallHit) toRemove.push(obj);
+              // Ensure we have a leaf shader material; if not, recreate it quickly.
+              if (!this._leafMat) {
+                console.warn("InnerWorld: _leafMat was null at tree load time. Recreating leaf shader material...");
+                this._leafMat = makeLeafMat(treeTex, this._noiseTex);
+              }
+
+              // Apply shader only to foliage-ish meshes (fallback: apply to all if single mesh)
+              let meshCount = 0;
+              tree.traverse((o) => { if (o && o.isMesh) meshCount++; });
+              const forceAll = meshCount === 1;
+
+              tree.traverse((child) => {
+                if (!child.isMesh) return;
+
+                // Some exports can have null materials; always ensure there's a material.
+                if (!child.material) child.material = fallbackTreeMat;
+
+                const n = (typeof child.name === "string") ? child.name.toLowerCase() : "";
+                let exclude = (
+                  n.includes("trunk") || n.includes("bark") || n.includes("stem") ||
+                  n.includes("star") || n.includes("orn") || n.includes("ball") ||
+                  n.includes("sock") || n.includes("ribbon") || n.includes("gift")
+                );
+                if (forceAll) exclude = false;
+
+                if (!exclude && this._leafMat) {
+                  const leafMat = this._leafMat;
+                  child.material = leafMat;
+                  leafMat.uniforms.uMap.value = treeTex;
+                  leafMat.uniforms.uNoise.value = this._noiseTex;
+                  leafMat.needsUpdate = true;
+                } else {
+                  // Keep PBR material, but apply our texture + micro detail.
+                  const mat = child.material;
+                  mat.map = treeTex;
+                  mat.roughnessMap = this._noiseTex;
+                  mat.normalMap = this._noiseTex;
+                  mat.normalScale = new THREE.Vector2(0.22, 0.22);
+                  mat.roughness = 0.85;
+                  mat.metalness = 0.0;
+                  mat.envMapIntensity = 0.55;
+                  mat.needsUpdate = true;
+                }
+
+                child.castShadow = true;
+                child.receiveShadow = true;
               });
 
-              for (const m of toRemove) {
-                if (m.parent) m.parent.remove(m);
-                if (m.geometry) m.geometry.dispose();
-                if (m.material) {
-                  if (Array.isArray(m.material)) m.material.forEach((mm) => mm.dispose());
-                  else m.material.dispose();
+              // set gradient range from bounds (guard if shader is missing)
+              tree.updateWorldMatrix(true, true);
+              const wb = new THREE.Box3().setFromObject(tree);
+              const minY = wb.min.y;
+              const maxY = wb.max.y;
+              const range = Math.max(1e-4, maxY - minY);
+              if (this._leafMat && this._leafMat.uniforms) {
+                this._leafMat.uniforms.uMinY.value = minY + range * 0.10;
+                this._leafMat.uniforms.uMaxY.value = minY + range * 0.92;
+              }
+
+              this.tree = tree;
+              installPerMeshHook(tree);
+
+              // Decorations (Role B): star + ribbon + ornaments + snowman + cabin
+              try {
+                this._buildDecorations(tree, wb);
+              } catch (decoErr) {
+                console.error("InnerWorld: decorations crashed; showing tree without decorations:", decoErr);
+              }
+
+              this.add(tree);
+              console.log("InnerWorld: tree loaded from", url);
+            } catch (err) {
+              console.error("InnerWorld: tree loaded but processing crashed. Showing fallback tree:", err);
+              const tree = gltf.scene;
+              tree.position.set(0, -0.06, 0);
+              tree.traverse((c) => {
+                if (c && c.isMesh) {
+                  c.material = fallbackTreeMat;
+                  c.castShadow = true;
+                  c.receiveShadow = true;
                 }
-              }
-              if (toRemove.length) console.log(`InnerWorld: removed ${toRemove.length} baked-in ornament mesh(es) from GLB.`);
-            };
-            removeBuiltinOrnaments();
-
-            // Ensure we have a leaf shader material; if not, recreate it quickly.
-            if (!this._leafMat) {
-              console.warn("InnerWorld: _leafMat was null at tree load time. Recreating leaf shader material...");
-              this._leafMat = makeLeafMat(treeTex, this._noiseTex);
+              });
+              this.tree = tree;
+              this.add(tree);
             }
-
-            // Apply shader only to foliage-ish meshes (fallback: apply to all if single mesh)
-            let meshCount = 0;
-            tree.traverse((o) => { if (o && o.isMesh) meshCount++; });
-            const forceAll = meshCount === 1;
-
-            tree.traverse((child) => {
-              if (!child.isMesh) return;
-
-              // Some exports can have null materials; always ensure there's a material.
-              if (!child.material) child.material = fallbackTreeMat;
-
-              const n = (typeof child.name === "string") ? child.name.toLowerCase() : "";
-              let exclude = (
-                n.includes("trunk") || n.includes("bark") || n.includes("stem") ||
-                n.includes("star") || n.includes("orn") || n.includes("ball") ||
-                n.includes("sock") || n.includes("ribbon") || n.includes("gift")
-              );
-              if (forceAll) exclude = false;
-
-              if (!exclude && this._leafMat) {
-                const leafMat = this._leafMat;
-                child.material = leafMat;
-                leafMat.uniforms.uMap.value = treeTex;
-                leafMat.uniforms.uNoise.value = this._noiseTex;
-                leafMat.needsUpdate = true;
-              } else {
-                // Keep PBR material, but apply our texture + micro detail.
-                const mat = child.material;
-                mat.map = treeTex;
-                mat.roughnessMap = this._noiseTex;
-                mat.normalMap = this._noiseTex;
-                mat.normalScale = new THREE.Vector2(0.22, 0.22);
-                mat.roughness = 0.85;
-                mat.metalness = 0.0;
-                mat.envMapIntensity = 0.55;
-                mat.needsUpdate = true;
-              }
-
-              child.castShadow = true;
-              child.receiveShadow = true;
-            });
-
-            // set gradient range from bounds (guard if shader is missing)
-            tree.updateWorldMatrix(true, true);
-            const wb = new THREE.Box3().setFromObject(tree);
-            const minY = wb.min.y;
-            const maxY = wb.max.y;
-            const range = Math.max(1e-4, maxY - minY);
-            if (this._leafMat && this._leafMat.uniforms) {
-              this._leafMat.uniforms.uMinY.value = minY + range * 0.10;
-              this._leafMat.uniforms.uMaxY.value = minY + range * 0.92;
-            }
-
-            this.tree = tree;
-            installPerMeshHook(tree);
-
-            // Decorations (Role B): star + ribbon + ornaments + snowman + cabin
-            try {
-              this._buildDecorations(tree, wb);
-            } catch (decoErr) {
-              console.error("InnerWorld: decorations crashed; showing tree without decorations:", decoErr);
-            }
-
-            this.add(tree);
-            console.log("InnerWorld: tree loaded from", url);
-          } catch (err) {
-            console.error("InnerWorld: tree loaded but processing crashed. Showing fallback tree:", err);
-            const tree = gltf.scene;
-            tree.position.set(0, -0.06, 0);
-            tree.traverse((c) => {
-              if (c && c.isMesh) {
-                c.material = fallbackTreeMat;
-                c.castShadow = true;
-                c.receiveShadow = true;
-              }
-            });
-            this.tree = tree;
-            this.add(tree);
+          },
+          undefined,
+          (e) => {
+            console.error("InnerWorld: tree load failed (network error OR exception in success handler):", url, e);
           }
+        );
+      };
+
+      // Load the actual tree model in this repo
+      loadTree("./assets/models/tree-edited.glb");
+
+      // 2) Load Ground
+      loader.load(
+        "./assets/models/ground.glb",
+        (gltf) => {
+          const ground = gltf.scene;
+          // Do NOT remove the debug placeholder here; only remove when tree loads.
+          installPerMeshHook(ground);
+          this.add(ground);
+          console.log("InnerWorld: ground loaded.");
         },
         undefined,
-        (e) => {
-          console.error("InnerWorld: tree load failed (network error OR exception in success handler):", url, e);
-        }
+        (e) => console.error("An error occurred loading the ground model", e)
       );
-    };
-
-    // Load the actual tree model in this repo
-    loadTree("./assets/models/tree-edited.glb");
-
-    // 2) Load Ground
-    loader.load(
-      "./assets/models/ground.glb",
-      (gltf) => {
-        const ground = gltf.scene;
-        // Do NOT remove the debug placeholder here; only remove when tree loads.
-        installPerMeshHook(ground);
-        this.add(ground);
-        console.log("InnerWorld: ground loaded.");
-      },
-      undefined,
-      (e) => console.error("An error occurred loading the ground model", e)
-    );
     } catch (err) {
       console.error("InnerWorld:init crashed (this would make the whole inner world disappear):", err);
     }

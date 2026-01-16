@@ -5,30 +5,50 @@ export class Lights extends BaseObject {
     init() {
         console.log("Lights: loading...");
 
-        // Light 1: Warm light from one side
-        const light1 = new THREE.PointLight(0xffaa33, 50, 10);
-        light1.position.set(2, 2, 2);
-        this.add(light1);
+        // --- Ambient light (NEW) ---
+        const ambientLight = new THREE.AmbientLight(
+            0xffffff, // neutral white
+            0.3       // low intensity so it doesn't flatten lighting
+        );
+        this.add(ambientLight);
 
-        // Light 2: Cool light from the opposite side
-        const light2 = new THREE.PointLight(0x33aaff, 5, 10);
-        light2.position.set(-2, 1, -2);
-        this.add(light2);
+        // Spotlight setup
+        this.spotlight = new THREE.SpotLight(
+            0xff0000,     // initial color
+            0,            // start at zero intensity
+            25,           // distance
+            Math.PI / 6,  // cone angle
+            0.35,         // penumbra
+            1.0           // decay
+        );
 
-        // Optional: Add helpers to visualize lights (commented out)
-        // const sphereSize = 0.2;
-        // const pointLightHelper1 = new THREE.PointLightHelper(light1, sphereSize);
-        // this.add(pointLightHelper1);
-        // const pointLightHelper2 = new THREE.PointLightHelper(light2, sphereSize);
-        // this.add(pointLightHelper2);
+        // Position above the snow globe
+        this.spotlight.position.set(0, 6, 6);
+        this.spotlight.target.position.set(0, 0, 0);
+
+        this.add(this.spotlight);
+        this.add(this.spotlight.target);
+
+        // Animation parameters
+        this.maxIntensity = 20;
+        this.blinkSpeed = 1.0;  // red/green switching speed
+        this.fadeSpeed = 1.0;   // dim/bright speed
 
         console.log("Lights: loaded.");
     }
 
     update(time) {
-        // Optional: Animate lights if needed
-        // const radius = 3;
-        // this.children[0].position.x = Math.cos(time) * radius;
-        // this.children[0].position.z = Math.sin(time) * radius;
+        // --- Color blinking ---
+        const s = Math.sin(time * this.fadeSpeed);
+
+        // Intensity: smooth fade from 0 → max → 0
+        this.spotlight.intensity = Math.abs(s) * this.maxIntensity;
+
+        // Color: one full sine per color
+        if (s >= 0.0) {
+            this.spotlight.color.set(0xff0000); // red
+        } else {
+            this.spotlight.color.set(0x00ff00); // green
+        }
     }
 }

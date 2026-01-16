@@ -57,114 +57,140 @@ export class InnerWorld extends BaseObject {
       };
 
       // --- stylized foliage shader: vertical gradient + rim + noise + wind sway ---
-      const makeLeafMat = (mapTex, noiseTex) =>
-        new THREE.ShaderMaterial({
-          uniforms: {
-            uMap: { value: mapTex },
-            uNoise: { value: noiseTex },
-            uTime: { value: 0.0 },
-            uTop: { value: new THREE.Color(0x7cffb2) },
-            uBot: { value: new THREE.Color(0x052010) },
-            uPower: { value: 2.4 },
-            uEdge: { value: new THREE.Color(0x86ffb6) },
-            uEdgeI: { value: 0.85 },
-            uNoiseScale: { value: 2.4 },
-            uNoiseStr: { value: 0.035 },
-            uWindStr: { value: 0.9 },
-            uWindFreq: { value: 0.8 },
-            uMinY: { value: -0.2 },
-            uMaxY: { value: 0.8 },
-          },
-          vertexShader: `
-          uniform float uTime;
-          uniform float uWindStr;
-          uniform float uWindFreq;
-          varying vec2 vUv;
-          varying vec3 vN;
-          varying vec3 vV;
-          varying vec3 vWPos;
-          void main(){
-            vUv = uv;
-            vec3 pos = position;
-            float h = clamp((pos.y + 0.2) / 1.2, 0.0, 1.0);
-            h = h*h;
-            float w1 = sin(uTime*uWindFreq + pos.x*2.0) * 0.060;
-            float w2 = sin(uTime*uWindFreq*2.5 + pos.z*5.0) * 0.028;
-            float w3 = sin(uTime*uWindFreq*4.0 + pos.x*3.0 + pos.z*4.0) * 0.014;
-            pos.x += (w1+w2+w3) * h * uWindStr;
-            pos.z += (w1*0.7+w2*1.2+w3*0.8) * h * uWindStr;
-            pos.y += w2 * 0.3 * h * uWindStr;
-            vec4 wpos = modelMatrix * vec4(pos, 1.0);
-            vWPos = wpos.xyz;
-            vN = normalize(mat3(modelMatrix) * normal);
-            vV = normalize(cameraPosition - wpos.xyz);
-            gl_Position = projectionMatrix * viewMatrix * wpos;
-          }
-        `,
-          fragmentShader: `
-          uniform sampler2D uMap;
-          uniform sampler2D uNoise;
-          uniform vec3 uTop;
-          uniform vec3 uBot;
-          uniform float uPower;
-          uniform vec3 uEdge;
-          uniform float uEdgeI;
-          uniform float uNoiseScale;
-          uniform float uNoiseStr;
-          uniform float uTime;
-          uniform float uMinY;
-          uniform float uMaxY;
-          varying vec2 vUv;
-          varying vec3 vN;
-          varying vec3 vV;
-          varying vec3 vWPos;
-          void main(){
-            vec3 N = normalize(vN);
-            if (!gl_FrontFacing) N = -N;
-            vec3 V = normalize(vV);
-            float ndv = clamp(dot(N, V), 0.0, 1.0);
-            float rim1 = pow(1.0 - ndv, uPower);
-            float rim2 = pow(1.0 - ndv, 4.0);
-            float rim3 = pow(1.0 - ndv, 8.0);
-
-            vec3 texCol = texture2D(uMap, vUv).rgb;
-            // foliage mask: green-dominant pixels
-            float gDom = texCol.g - max(texCol.r, texCol.b);
-            float foliage = smoothstep(0.03, 0.14, gDom);
-
-            float denom = max(1e-4, (uMaxY - uMinY));
-            float h01 = clamp((vWPos.y - uMinY) / denom, 0.0, 1.0);
-            h01 = pow(h01, 0.55);
-            vec3 grad = mix(uBot, uTop, h01);
-
-            vec2 nUv = vWPos.xz * uNoiseScale;
-            float n1 = texture2D(uNoise, nUv).r;
-            float n2 = texture2D(uNoise, nUv*3.1 + vec2(0.17,0.53)).r;
-            float n = mix(n1, n2, 0.35);
-            float mod = (smoothstep(0.20,0.80, clamp((n-0.5)*0.5+0.5,0.0,1.0)) * 2.0 - 1.0);
-
-            vec3 base = texCol;
-            vec3 foliageCol = mix(texCol, grad, 0.55);
-            foliageCol *= mix(0.55, 1.45, h01);
-            base = mix(base, foliageCol, foliage);
-            base *= (1.0 + mod * uNoiseStr * foliage);
-
-            float breathe = sin(uTime * 1.5) * 0.15 + 0.85;
-            vec3 edge1 = uEdge * rim1 * uEdgeI * 0.60 * breathe;
-            vec3 edge2 = vec3(0.15,0.31,0.16) * rim2 * 0.40;
-            vec3 edge3 = vec3(1.0,1.0,0.90) * rim3 * 0.85;
-
-            vec3 col = min(base + edge1 + edge2 + edge3, vec3(1.0));
-            gl_FragColor = vec4(col, 1.0);
-
-            #include <tonemapping_fragment>
-            #include <colorspace_fragment>
-          }
-        `,
+      const makeLeafMat = (mapTex, noiseTex) => {
+        const mat = new THREE.MeshStandardMaterial({
+          map: mapTex,
+          normalMap: noiseTex,      // Use noise texture for micro-surface detail
+          normalScale: new THREE.Vector2(0.15, 0.15),
+          roughnessMap: noiseTex,
+          roughness: 0.85,
+          metalness: 0.1,
           side: THREE.DoubleSide,
-          depthTest: true,
-          depthWrite: true,
+          alphaTest: 0.25,
         });
+
+        // Store uniforms for onBeforeCompile
+        mat.userData.uNoise = { value: noiseTex };
+        mat.userData.uTime = { value: 0.0 };
+        mat.userData.uTop = { value: new THREE.Color(0x7cffb2) };
+        mat.userData.uBot = { value: new THREE.Color(0x052010) };
+        mat.userData.uNoiseScale = { value: 2.4 };
+        mat.userData.uNoiseStr = { value: 0.035 };
+        mat.userData.uWindStr = { value: 0.9 };
+        mat.userData.uWindFreq = { value: 0.8 };
+        mat.userData.uMinY = { value: -0.2 };
+        mat.userData.uMaxY = { value: 0.8 };
+
+        mat.onBeforeCompile = (shader) => {
+          // Link uniforms
+          shader.uniforms.uNoise = mat.userData.uNoise;
+          shader.uniforms.uTime = mat.userData.uTime;
+          shader.uniforms.uTop = mat.userData.uTop;
+          shader.uniforms.uBot = mat.userData.uBot;
+          shader.uniforms.uNoiseScale = mat.userData.uNoiseScale;
+          shader.uniforms.uNoiseStr = mat.userData.uNoiseStr;
+          shader.uniforms.uWindStr = mat.userData.uWindStr;
+          shader.uniforms.uWindFreq = mat.userData.uWindFreq;
+          shader.uniforms.uMinY = mat.userData.uMinY;
+          shader.uniforms.uMaxY = mat.userData.uMaxY;
+
+          // --- Vertex Shader Injection ---
+
+          shader.vertexShader = `
+            uniform float uTime;
+            uniform float uWindStr;
+            uniform float uWindFreq;
+            varying vec3 vCustomWorldPos;
+          ` + shader.vertexShader;
+
+          // Inject Wind Sway logic into 'begin_vertex' token
+          // We compute wind offset on 'position' and update 'transformed'
+          // Then we verify vCustomWorldPos is set for the fragment shader
+          shader.vertexShader = shader.vertexShader.replace(
+            "#include <begin_vertex>",
+            `
+              vec3 transformed = vec3( position );
+              
+              // Wind Logic
+              // "h" is based on local y (0.2 offset logic from original)
+              float sw_h = clamp((position.y + 0.2) / 1.2, 0.0, 1.0);
+              sw_h = sw_h * sw_h;
+              
+              float w1 = sin(uTime * uWindFreq + position.x * 2.0) * 0.060;
+              float w2 = sin(uTime * uWindFreq * 2.5 + position.z * 5.0) * 0.028;
+              float w3 = sin(uTime * uWindFreq * 4.0 + position.x * 3.0 + position.z * 4.0) * 0.014;
+              
+              vec3 windOffset = vec3(
+                (w1 + w2 + w3) * sw_h * uWindStr,
+                w2 * 0.3 * sw_h * uWindStr,
+                (w1 * 0.7 + w2 * 1.2 + w3 * 0.8) * sw_h * uWindStr
+              );
+              
+              transformed += windOffset;
+
+              // Compute world position for gradient logic in fragment shader
+              vCustomWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+            `
+          );
+
+          // --- Fragment Shader Injection ---
+
+          shader.fragmentShader = `
+            uniform sampler2D uNoise;
+            uniform vec3 uTop;
+            uniform vec3 uBot;
+            uniform float uNoiseScale;
+            uniform float uNoiseStr;
+            uniform float uMinY;
+            uniform float uMaxY;
+            varying vec3 vCustomWorldPos;
+          ` + shader.fragmentShader;
+
+          // Modulate diffuseColor (after map sampling)
+          shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <map_fragment>",
+            `
+              #include <map_fragment>
+
+              // --- Custom Gradient & Noise Logic ---
+              
+              // foliage mask: green-dominant pixels
+              // diffuseColor comes from map_fragment
+              float gDom = diffuseColor.g - max(diffuseColor.r, diffuseColor.b);
+              float foliage = smoothstep(0.03, 0.14, gDom);
+
+              // Vertical Gradient Logic
+              float min_y = uMinY;
+              float max_y = uMaxY;
+              float denom = max(1e-4, (max_y - min_y));
+              
+              float h01 = clamp((vCustomWorldPos.y - min_y) / denom, 0.0, 1.0);
+              h01 = pow(h01, 0.55); // gamma curve
+              vec3 grad = mix(uBot, uTop, h01);
+
+              // Noise Texture Lookup
+              vec2 nUv = vCustomWorldPos.xz * uNoiseScale;
+              float n1 = texture2D(uNoise, nUv).r;
+              float n2 = texture2D(uNoise, nUv * 3.1 + vec2(0.17, 0.53)).r;
+              float n = mix(n1, n2, 0.35);
+              float nMod = (smoothstep(0.20, 0.80, clamp((n - 0.5) * 0.5 + 0.5, 0.0, 1.0)) * 2.0 - 1.0);
+
+              // Mix Gradient into base color
+              vec3 foliageCol = mix(diffuseColor.rgb, grad, 0.55);
+              foliageCol *= mix(0.55, 1.45, h01); // brighten top
+
+              // Apply result to diffuseColor
+              diffuseColor.rgb = mix(diffuseColor.rgb, foliageCol, foliage);
+              diffuseColor.rgb *= (1.0 + nMod * uNoiseStr * foliage);
+            `
+          );
+        };
+
+        // Use userData as uniforms proxy for the update loop
+        mat.uniforms = mat.userData;
+
+        return mat;
+      };
 
       // Texture
       const treeTex = texLoader.load("./assets/textures/xmas_tree.jpeg");
@@ -259,8 +285,8 @@ export class InnerWorld extends BaseObject {
                 if (!exclude && this._leafMat) {
                   const leafMat = this._leafMat;
                   child.material = leafMat;
-                  leafMat.uniforms.uMap.value = treeTex;
-                  leafMat.uniforms.uNoise.value = this._noiseTex;
+                  // leafMat.uniforms.uMap.value = treeTex; // Fixed: map is set in makeLeafMat
+                  // leafMat.uniforms.uNoise.value = this._noiseTex; // Fixed: redundant
                   leafMat.needsUpdate = true;
                 } else {
                   // Keep PBR material, but apply our texture + micro detail.

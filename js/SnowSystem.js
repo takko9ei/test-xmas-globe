@@ -1,123 +1,158 @@
-import * as THREE from "three";
-import { BaseObject } from "./BaseObject.js";
-import { createGlitterMaterial } from "./GlitterAppearance.js";
+import * as THREE from 'three';
+import { BaseObject } from './BaseObject.js';
 
 export class SnowSystem extends BaseObject {
   init() {
-    console.log("SnowSystem init");
+    console.log("SnowSystem init (1.5x Amount Ver.)");
 
-    // === Exposed Parameters ===
+    // === パラメータ設定 ===
     this.params = {
       sphereRadius: 0.95,
       sphereCenter: new THREE.Vector3(0, 0, 0),
-      particleSpeed: 0.003,
-      particleSize: 0.012,
+      particleSpeed: 0.002, // ゆったりと浮遊する速度
+      particleSize: 0.035,  // 繊細なサイズ
       color: new THREE.Color(0xffffff),
-      brightness: 1.9,
     };
     // ==========================
 
-    this.count = 1500;
+    // 【変更点】雪の量を1.5倍に増量 (1500 -> 2250)
+    this.count = 2250;
 
-    // Use dynamic geometry based on particleSize
-    // 2 particlesize, for a square mesh
     const geometry = new THREE.PlaneGeometry(
       this.params.particleSize,
       this.params.particleSize
     );
 
-    this.material = createGlitterMaterial({
+    const snowTexture = this.createSnowTexture();
+
+    this.material = new THREE.MeshBasicMaterial({
       color: this.params.color,
-      brightness: this.params.brightness,
+      map: snowTexture,
+      transparent: false,
+      alphaTest: 0.5,
+      side: THREE.DoubleSide,
+      blending: THREE.NormalBlending
     });
 
     this.mesh = new THREE.InstancedMesh(geometry, this.material, this.count);
+    this.mesh.frustumCulled = false; 
     this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.add(this.mesh);
 
-    // Particle data
     this.particles = [];
     const dummy = new THREE.Object3D();
+    const tempColor = new THREE.Color();
 
     for (let i = 0; i < this.count; i++) {
       const particle = this.generateParticle({}, true);
       this.particles.push(particle);
       this.updateParticleMatrix(i, particle, dummy);
+
+      // 色のランダム化（白・青白・輝き）
+      const r = 0.9 + Math.random() * 0.1;
+      const g = 0.9 + Math.random() * 0.1;
+      const b = 1.0; 
+      const brightness = 0.9 + Math.random() * 0.1;
+      
+      tempColor.setRGB(r * brightness, g * brightness, b * brightness);
+      this.mesh.setColorAt(i, tempColor);
     }
 
     this.mesh.instanceMatrix.needsUpdate = true;
+    if (this.mesh.instanceColor) {
+      this.mesh.instanceColor.needsUpdate = true;
+    }
   }
 
-  // Generate a particle STRICTLY inside the defined sphere
+  createSnowTexture() {
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    const center = size / 2;
+    const maxRadius = size * 0.45;
+
+    context.clearRect(0, 0, size, size);
+
+    context.strokeStyle = 'rgba(255, 255, 255, 1.0)';
+    context.lineWidth = 8;
+    context.lineCap = 'round';
+    context.shadowBlur = 0; 
+
+    function drawSymmetric(drawFunc) {
+      for (let i = 0; i < 6; i++) {
+        context.save();
+        context.translate(center, center);
+        context.rotate((Math.PI / 3) * i);
+        drawFunc();
+        context.restore();
+      }
+    }
+
+    drawSymmetric(() => {
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.lineTo(maxRadius, 0);
+      context.stroke();
+
+      for (let j = 1; j <= 2; j++) {
+        const dist = (maxRadius * 0.3) * j;
+        const len = (maxRadius * 0.25);
+        context.beginPath();
+        context.moveTo(dist, 0);
+        context.lineTo(dist + len * 0.5, len * 0.866);
+        context.moveTo(dist, 0);
+        context.lineTo(dist + len * 0.5, -len * 0.866);
+        context.stroke();
+      }
+    });
+
+    context.beginPath();
+    context.arc(center, center, size * 0.1, 0, Math.PI * 2);
+    context.fillStyle = 'white';
+    context.fill();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true; 
+    return texture;
+  }
+
   generateParticle(p, initial = false) {
-    const { sphereRadius, sphereCenter, particleSpeed } = this.params;
-
-    // 1. Position Generation
-    // We need a random point inside the sphere: sphereCenter + random_in_radius
-    // If NOT initial (respawning), we prefer them to spawn at the top of the sphere to fall down,
-    // but still STRICTLY inside the sphere boundaries.
-
+    const { sphereRadius, sphereCenter } = this.params;
     let pos = new THREE.Vector3();
 
     if (initial) {
-      // Uniform random point inside sphere
       const r = Math.cbrt(Math.random()) * sphereRadius;
       const theta = Math.random() * 2 * Math.PI;
       const phi = Math.acos(2 * Math.random() - 1);
-
-      pos.set(
-        r * Math.sin(phi) * Math.cos(theta),
-        r * Math.cos(phi),
-        r * Math.sin(phi) * Math.sin(theta)
-      );
+      pos.set(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta));
     } else {
-      // Respawn: Pick a point on the top Hemisphere or mainly top area to simulate falling in
-      // To keep it strictly in sphere, we can pick a random point on a disk at a high Y,
-      // OR picking a random point in the top cap.
-
-      // Let's spawn them in the top 20% of the sphere volume for continuity
-      // y range: [sphereRadius * 0.8, sphereRadius]
-      // But we must respect the spherical boundary at that Y.
-
       const rVal = sphereRadius;
-      // height from center
-      const yMin = rVal * 0.5; // Start showing up from half way up
-      const yMax = rVal * 0.95; // Don't spawn perfectly at edge to avoid clipping instantly
-
+      const yMin = rVal * 0.4;
+      const yMax = rVal * 0.9;
       const y = yMin + Math.random() * (yMax - yMin);
-
-      // At height y, the max radius is sqrt(R^2 - y^2)
       const maxR = Math.sqrt(rVal * rVal - y * y);
-      const rDisk = Math.sqrt(Math.random()) * maxR; // Uniform disk distribution
+      const rDisk = Math.sqrt(Math.random()) * maxR;
       const angle = Math.random() * 2 * Math.PI;
-
       pos.set(rDisk * Math.cos(angle), y, rDisk * Math.sin(angle));
     }
 
-    // Apply Center Offset
     pos.add(sphereCenter);
     p.position = pos;
 
-    // 2. Velocity
-    // Falling down (-y) with some sway
-    const speed = particleSpeed;
+    const speed = this.params.particleSpeed;
     p.velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * speed * 0.5, // Sway X
-      -(speed + Math.random() * speed * 0.5), // Fall Y
-      (Math.random() - 0.5) * speed * 0.5 // Sway Z
+      0, 
+      -(speed + Math.random() * speed * 0.5), 
+      0 
     );
 
-    // 3. Rotation
-    p.rotation = new THREE.Euler(
-      Math.random() * Math.PI,
-      Math.random() * Math.PI,
-      Math.random() * Math.PI
-    );
-    p.rotSpeed = new THREE.Euler(
-      (Math.random() - 0.5) * 0.1,
-      (Math.random() - 0.5) * 0.1,
-      (Math.random() - 0.5) * 0.1
-    );
+    p.swayOffset = Math.random() * 100; 
+    p.swaySpeed = 0.5 + Math.random() * 0.5;
+
+    p.rotation = new THREE.Euler(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    p.rotSpeed = new THREE.Euler(Math.random() * 0.01, Math.random() * 0.01, Math.random() * 0.01);
 
     return p;
   }
@@ -131,53 +166,30 @@ export class SnowSystem extends BaseObject {
 
   update(time) {
     if (!this.mesh) return;
-
-    if (this.material.uniforms) {
-      this.material.uniforms.time.value = time;
-    }
-
     const { sphereRadius, sphereCenter } = this.params;
     const dummy = new THREE.Object3D();
     const radiusSq = sphereRadius * sphereRadius;
-
-    // Temp vector for distance check
     const tempPos = new THREE.Vector3();
 
     for (let i = 0; i < this.count; i++) {
       const p = this.particles[i];
 
-      // Move
       p.position.add(p.velocity);
 
-      // Rotate
+      const sway = Math.sin(time * p.swaySpeed + p.swayOffset) * 0.001; 
+      p.position.x += sway;
+      p.position.z += sway * 0.5;
+
       p.rotation.x += p.rotSpeed.x;
       p.rotation.y += p.rotSpeed.y;
       p.rotation.z += p.rotSpeed.z;
 
-      // Boundary Check
-      // Calculate distance from sphere center
       tempPos.copy(p.position).sub(sphereCenter);
-
-      // If outside radius OR too low (bottom of sphere)
-      // Actually, just checking radius is enough to keep them inside the spherical volume.
-      // But if they fall out the bottom, we want to respawn them.
-
-      // We respawn if:
-      // 1. Distance > Radius (Exited sphere)
-      // 2. OR y is below the sphere bottom (relative to center) -> strictly, 1 covers this, but we might want them to die earlier if we only want snow in the top half?
-      // User said: "limit all particles in a sphere range". So strictly radius check.
-
       if (tempPos.lengthSq() > radiusSq) {
-        // To prevent popping, maybe we only respawn if they are at the BOTTOM hemisphere?
-        // If they drift out the side/top, we should force them back or respawn?
-        // Simple interaction: Respawn.
         this.generateParticle(p);
       }
-
       this.updateParticleMatrix(i, p, dummy);
     }
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 }
-//这个代码在哪一行做了”将创建的这些面片都塞进一个mesh里面的？
-//具体的，描述一下完整的snowsystem中的面片绘制流程，包括cpu和gpu是怎么协同工作的

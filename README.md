@@ -2,9 +2,10 @@
 
 A beautiful, interactive 3D Christmas Snow Globe built with Three.js. This project features a realistic glass sphere, dynamic lighting, a particle snow system, and a cozy winter scene inside.
 
-## (Screenshot)
+## Screenshot
 
-![Project Screenshot](placeholder)
+<img width="3199" height="1718" alt="image" src="https://github.com/user-attachments/assets/b9079dde-7304-46d0-ae22-0fe0cd329f9e" />
+
 
 ---
 

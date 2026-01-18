@@ -26,7 +26,7 @@ export class GlobeGlass extends BaseObject {
               clearcoat: 0.1,
               clearcoatRoughness: 0.0,
               envMapIntensity: 1.5, // enhance reflection
-              attenuationColor: new THREE.Color(0xefefff), // 极淡的蓝
+              attenuationColor: new THREE.Color(0xefefff), // awai blue
               attenuationDistance: 0.8,
               transparent: true,
               depthWrite: false,
@@ -41,12 +41,12 @@ export class GlobeGlass extends BaseObject {
       },
       (xhr) => {
         console.log(
-          "Xhr for GlobeGlass: " + (xhr.loaded / xhr.total) * 100 + "% loaded"
+          "Xhr for GlobeGlass: " + (xhr.loaded / xhr.total) * 100 + "% loaded",
         );
       },
       (error) => {
         console.error("An error occurred loading the globe model", error);
-      }
+      },
     );
   }
 

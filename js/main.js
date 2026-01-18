@@ -59,11 +59,11 @@ window.addEventListener("resize", () => {
   }, 100); // 100ms debounce
 });
 
-// Add controller for debugging
+// Add controller
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.zoomSpeed = 3.0;
 
-// Instance group members' objects
+// Instance objects
 const myObjects = [];
 const classesToLoad = [
   BaseStand,
@@ -74,7 +74,7 @@ const classesToLoad = [
   Lights,
 ];
 
-// ===instancialize all objects===
+// instancialize all objects
 classesToLoad.forEach((ClassRef) => {
   const instance = new ClassRef();
   scene.add(instance);
@@ -86,7 +86,7 @@ const lights = myObjects.find((obj) => obj instanceof Lights);
 if (lights) {
   const gui = new GUI();
 
-  // Light 1 (Main)
+  // gui o Light 1 (Main)
   const f1 = gui.addFolder("ライト1");
   f1.addColor(lights.mainLight, "color").name("カラー");
   f1.add(lights.mainLight, "intensity", 0, 30).name("明るさ");
@@ -95,7 +95,7 @@ if (lights) {
   p1.add(lights.mainLight.position, "y", -5, 5);
   p1.add(lights.mainLight.position, "z", -5, 5);
 
-  // Light 2 (Fill)
+  // gui o Light 2 (Fill)
   const f2 = gui.addFolder("ライト2");
   f2.addColor(lights.fillLight, "color").name("カラー");
   f2.add(lights.fillLight, "intensity", 0, 30).name("明るさ");
@@ -104,7 +104,7 @@ if (lights) {
   p2.add(lights.fillLight.position, "y", -5, 5);
   p2.add(lights.fillLight.position, "z", -5, 5);
 
-  // Light 3 (Rim)
+  // gui o Light 3 (Rim)
   const f3 = gui.addFolder("ライト3");
   f3.addColor(lights.rimLight, "color").name("カラー");
   f3.add(lights.rimLight, "intensity", 0, 30).name("明るさ");
@@ -120,7 +120,7 @@ function animate(time) {
 
   const timeSeconds = time * 0.001;
 
-  // Automatically call update for all objects
+  // automatically call update for all objects
   myObjects.forEach((obj) => {
     if (obj.update) obj.update(timeSeconds, camera);
   });

@@ -6,10 +6,10 @@ export class InnerWorld extends BaseObject {
   tree = null;
 
   // Role B visuals
-  _leafMat = null;        // shared ShaderMaterial
-  _noiseTex = null;       // DataTexture
-  _deco = null;           // decoration group attached to tree
-  _swing = [];            // swingable objects
+  _leafMat = null; // shared ShaderMaterial
+  _noiseTex = null; // DataTexture
+  _deco = null; // decoration group attached to tree
+  _swing = []; // swingable objects
 
   init() {
     console.log("InnerWorld: loading...");
@@ -32,18 +32,18 @@ export class InnerWorld extends BaseObject {
         },
         cabin: {
           scale: 3.0,
-          position: new THREE.Vector3(0.30, -0.35, 0.27),
+          position: new THREE.Vector3(0.3, -0.35, 0.27),
           rotationY: (Math.PI / 180) * 35,
         },
         decorations: {
           starEnabled: false,
-        }
+        },
       };
 
       const loader = new GLTFLoader();
       const texLoader = new THREE.TextureLoader();
 
-      // --- tiny procedural noise texture for micro-detail (no new assets) ---
+      // tiny procedural noise texture for micro-detail
       const makeNoiseTex = (size = 128) => {
         const data = new Uint8Array(size * size * 4);
         for (let i = 0; i < size * size; i++) {
@@ -59,11 +59,11 @@ export class InnerWorld extends BaseObject {
         return t;
       };
 
-      // --- stylized foliage shader: vertical gradient + rim + noise + wind sway ---
+      // stylized foliage shader: vertical gradient + rim + noise + wind sway
       const makeLeafMat = (mapTex, noiseTex) => {
         const mat = new THREE.MeshStandardMaterial({
           map: mapTex,
-          normalMap: noiseTex,      // Use noise texture for micro-surface detail
+          normalMap: noiseTex, // Use noise texture for micro-surface detail
           normalScale: new THREE.Vector2(0.15, 0.15),
           roughnessMap: noiseTex,
           roughness: 0.85,
@@ -97,9 +97,10 @@ export class InnerWorld extends BaseObject {
           shader.uniforms.uMinY = mat.userData.uMinY;
           shader.uniforms.uMaxY = mat.userData.uMaxY;
 
-          // --- Vertex Shader Injection ---
+          // Vertex Shader Injection
 
-          shader.vertexShader = `
+          shader.vertexShader =
+            `
             uniform float uTime;
             uniform float uWindStr;
             uniform float uWindFreq;
@@ -133,12 +134,13 @@ export class InnerWorld extends BaseObject {
 
               // Compute world position for gradient logic in fragment shader
               vCustomWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
-            `
+            `,
           );
 
-          // --- Fragment Shader Injection ---
+          // Fragment Shader Injection
 
-          shader.fragmentShader = `
+          shader.fragmentShader =
+            `
             uniform sampler2D uNoise;
             uniform vec3 uTop;
             uniform vec3 uBot;
@@ -155,7 +157,7 @@ export class InnerWorld extends BaseObject {
             `
               #include <map_fragment>
 
-              // --- Custom Gradient & Noise Logic ---
+              // Custom Gradient & Noise Logic
               
               // foliage mask: green-dominant pixels
               // diffuseColor comes from map_fragment
@@ -185,7 +187,7 @@ export class InnerWorld extends BaseObject {
               // Apply result to diffuseColor
               diffuseColor.rgb = mix(diffuseColor.rgb, foliageCol, foliage);
               diffuseColor.rgb *= (1.0 + nMod * uNoiseStr * foliage);
-            `
+            `,
           );
         };
 
@@ -209,9 +211,11 @@ export class InnerWorld extends BaseObject {
       this._leafMat = makeLeafMat(treeTex, this._noiseTex);
 
       // Fallback material: used if shader material isn't ready or any decoration step fails
-      const fallbackTreeMat = new THREE.MeshStandardMaterial({ color: 0x2b6a3a, roughness: 0.9, metalness: 0.0 });
-
-
+      const fallbackTreeMat = new THREE.MeshStandardMaterial({
+        color: 0x2b6a3a,
+        roughness: 0.9,
+        metalness: 0.0,
+      });
 
       // 1) Load Tree (try edited tree first, then fallback)
       const loadTree = (url) => {
@@ -229,20 +233,25 @@ export class InnerWorld extends BaseObject {
                 const toRemove = [];
                 tree.traverse((obj) => {
                   if (!obj || !obj.isMesh) return;
-                  const name = (typeof obj.name === "string") ? obj.name.toLowerCase() : "";
-                  const nameHit = /ball|bauble|ornament|orn|sphere|deco|decoration/.test(name);
+                  const name =
+                    typeof obj.name === "string" ? obj.name.toLowerCase() : "";
+                  const nameHit =
+                    /ball|bauble|ornament|orn|sphere|deco|decoration/.test(
+                      name,
+                    );
 
                   // Size heuristic: small-ish meshes are likely ornaments (tree itself is much larger)
                   let smallHit = false;
                   if (obj.geometry) {
-                    if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
+                    if (!obj.geometry.boundingBox)
+                      obj.geometry.computeBoundingBox();
                     if (obj.geometry.boundingBox) {
                       const bb = obj.geometry.boundingBox;
                       const sx = bb.max.x - bb.min.x;
                       const sy = bb.max.y - bb.min.y;
                       const sz = bb.max.z - bb.min.z;
                       const maxDim = Math.max(sx, sy, sz);
-                      smallHit = maxDim > 0.0 && maxDim < 0.10;
+                      smallHit = maxDim > 0.0 && maxDim < 0.1;
                     }
                   }
 
@@ -253,23 +262,31 @@ export class InnerWorld extends BaseObject {
                   if (m.parent) m.parent.remove(m);
                   if (m.geometry) m.geometry.dispose();
                   if (m.material) {
-                    if (Array.isArray(m.material)) m.material.forEach((mm) => mm.dispose());
+                    if (Array.isArray(m.material))
+                      m.material.forEach((mm) => mm.dispose());
                     else m.material.dispose();
                   }
                 }
-                if (toRemove.length) console.log(`InnerWorld: removed ${toRemove.length} baked-in ornament mesh(es) from GLB.`);
+                if (toRemove.length)
+                  console.log(
+                    `InnerWorld: removed ${toRemove.length} baked-in ornament mesh(es) from GLB.`,
+                  );
               };
               removeBuiltinOrnaments();
 
               // Ensure we have a leaf shader material; if not, recreate it quickly.
               if (!this._leafMat) {
-                console.warn("InnerWorld: _leafMat was null at tree load time. Recreating leaf shader material...");
+                console.warn(
+                  "InnerWorld: _leafMat was null at tree load time. Recreating leaf shader material...",
+                );
                 this._leafMat = makeLeafMat(treeTex, this._noiseTex);
               }
 
               // Apply shader only to foliage-ish meshes (fallback: apply to all if single mesh)
               let meshCount = 0;
-              tree.traverse((o) => { if (o && o.isMesh) meshCount++; });
+              tree.traverse((o) => {
+                if (o && o.isMesh) meshCount++;
+              });
               const forceAll = meshCount === 1;
 
               tree.traverse((child) => {
@@ -278,12 +295,20 @@ export class InnerWorld extends BaseObject {
                 // Some exports can have null materials; always ensure there's a material.
                 if (!child.material) child.material = fallbackTreeMat;
 
-                const n = (typeof child.name === "string") ? child.name.toLowerCase() : "";
-                let exclude = (
-                  n.includes("trunk") || n.includes("bark") || n.includes("stem") ||
-                  n.includes("star") || n.includes("orn") || n.includes("ball") ||
-                  n.includes("sock") || n.includes("ribbon") || n.includes("gift")
-                );
+                const n =
+                  typeof child.name === "string"
+                    ? child.name.toLowerCase()
+                    : "";
+                let exclude =
+                  n.includes("trunk") ||
+                  n.includes("bark") ||
+                  n.includes("stem") ||
+                  n.includes("star") ||
+                  n.includes("orn") ||
+                  n.includes("ball") ||
+                  n.includes("sock") ||
+                  n.includes("ribbon") ||
+                  n.includes("gift");
                 if (forceAll) exclude = false;
 
                 if (!exclude && this._leafMat) {
@@ -316,7 +341,7 @@ export class InnerWorld extends BaseObject {
               const maxY = wb.max.y;
               const range = Math.max(1e-4, maxY - minY);
               if (this._leafMat && this._leafMat.uniforms) {
-                this._leafMat.uniforms.uMinY.value = minY + range * 0.10;
+                this._leafMat.uniforms.uMinY.value = minY + range * 0.1;
                 this._leafMat.uniforms.uMaxY.value = minY + range * 0.92;
               }
 
@@ -328,13 +353,19 @@ export class InnerWorld extends BaseObject {
               try {
                 this._buildDecorations(tree, wb);
               } catch (decoErr) {
-                console.error("InnerWorld: decorations crashed; showing tree without decorations:", decoErr);
+                console.error(
+                  "InnerWorld: decorations crashed; showing tree without decorations:",
+                  decoErr,
+                );
               }
 
               this.add(tree);
               console.log("InnerWorld: tree loaded from", url);
             } catch (err) {
-              console.error("InnerWorld: tree loaded but processing crashed. Showing fallback tree:", err);
+              console.error(
+                "InnerWorld: tree loaded but processing crashed. Showing fallback tree:",
+                err,
+              );
               const tree = gltf.scene;
               tree.position.set(0, -0.06, 0);
               tree.traverse((c) => {
@@ -350,8 +381,12 @@ export class InnerWorld extends BaseObject {
           },
           undefined,
           (e) => {
-            console.error("InnerWorld: tree load failed (network error OR exception in success handler):", url, e);
-          }
+            console.error(
+              "InnerWorld: tree load failed (network error OR exception in success handler):",
+              url,
+              e,
+            );
+          },
         );
       };
 
@@ -371,10 +406,13 @@ export class InnerWorld extends BaseObject {
           console.log("InnerWorld: ground loaded.");
         },
         undefined,
-        (e) => console.error("An error occurred loading the ground model", e)
+        (e) => console.error("An error occurred loading the ground model", e),
       );
     } catch (err) {
-      console.error("InnerWorld:init crashed (this would make the whole inner world disappear):", err);
+      console.error(
+        "InnerWorld:init crashed (this would make the whole inner world disappear):",
+        err,
+      );
     }
   }
 
@@ -436,10 +474,9 @@ export class InnerWorld extends BaseObject {
       return shape;
     };
 
-    // --- Big top star (extruded) ---
+    // Big top star (extruded)
     if (this.params.decorations.starEnabled) {
-
-      const starGeo = new THREE.ExtrudeGeometry(makeStarShape(0.060, 0.028), {
+      const starGeo = new THREE.ExtrudeGeometry(makeStarShape(0.06, 0.028), {
         depth: 0.018,
         bevelEnabled: true,
         bevelSize: 0.004,
@@ -463,12 +500,12 @@ export class InnerWorld extends BaseObject {
       this._deco.add(star);
     }
 
-    // --- Ribbon (tube around the tree) ---
+    // Ribbon (tube around the tree)
     const ribbonTurns = 3.2;
     const pts = [];
     for (let i = 0; i <= 120; i++) {
       const t = i / 120;
-      const y = (center.y - treeH / 2) + 0.10 + t * (treeH * 0.82);
+      const y = center.y - treeH / 2 + 0.1 + t * (treeH * 0.82);
       const r = (1.0 - t) * treeR * 0.95 + 0.02;
       const a = t * Math.PI * 2 * ribbonTurns;
       pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
@@ -476,14 +513,20 @@ export class InnerWorld extends BaseObject {
     const curve = new THREE.CatmullRomCurve3(pts);
     const ribbon = new THREE.Mesh(
       new THREE.TubeGeometry(curve, 240, 0.012, 10, false),
-      new THREE.MeshStandardMaterial({ color: 0xd1152a, roughness: 0.55, metalness: 0.05 })
+      new THREE.MeshStandardMaterial({
+        color: 0xd1152a,
+        roughness: 0.55,
+        metalness: 0.05,
+      }),
     );
     ribbon.castShadow = true;
     this._deco.add(ribbon);
 
-    // --- Surface sampler: raycast from outside toward tree center so ornaments stick to the surface ---
+    // Surface sampler: raycast from outside toward tree center so ornaments stick to the surface
     const rayMeshes = [];
-    tree.traverse((o) => { if (o && o.isMesh) rayMeshes.push(o); });
+    tree.traverse((o) => {
+      if (o && o.isMesh) rayMeshes.push(o);
+    });
     const raycaster = new THREE.Raycaster();
     const _vA = new THREE.Vector3();
     const _vB = new THREE.Vector3();
@@ -497,8 +540,8 @@ export class InnerWorld extends BaseObject {
       const oxL = Math.cos(angle) * startR;
       const ozL = Math.sin(angle) * startR;
 
-      _vA.set(oxL, yLocal, ozL);              // origin (local)
-      _vB.set(0, yLocal, 0).sub(_vA);         // dir (local)
+      _vA.set(oxL, yLocal, ozL); // origin (local)
+      _vB.set(0, yLocal, 0).sub(_vA); // dir (local)
       if (_vB.lengthSq() < 1e-8) _vB.set(-1, 0, 0);
       _vB.normalize();
 
@@ -540,18 +583,17 @@ export class InnerWorld extends BaseObject {
       return { posL, nL };
     };
 
-
-    // --- Mini stars (stick to surface like ornaments) ---
+    // Mini stars (stick to surface like ornaments)
     const miniStarMat = new THREE.MeshStandardMaterial({
       color: 0xffe08a,
       emissive: 0xffc24a,
-      emissiveIntensity: 0.40,
-      roughness: 0.40,
+      emissiveIntensity: 0.4,
+      roughness: 0.4,
       metalness: 0.18,
     });
 
     const miniStarGeo = new THREE.ExtrudeGeometry(makeStarShape(0.028, 0.013), {
-      depth: 0.010,
+      depth: 0.01,
       bevelEnabled: true,
       bevelSize: 0.002,
       bevelThickness: 0.002,
@@ -568,7 +610,7 @@ export class InnerWorld extends BaseObject {
       // Stratified height so we fill the tree evenly (middle-to-upper band)
       const u = (i + 0.5) / miniStarCount;
       const t = 0.26 + u * 0.56; // 0.26..0.82
-      const y = (center.y - treeH / 2) + 0.12 + t * (treeH * 0.75);
+      const y = center.y - treeH / 2 + 0.12 + t * (treeH * 0.75);
 
       // Golden-angle around the tree + small jitter
       const a0 = (i * golden) % (Math.PI * 2);
@@ -607,20 +649,44 @@ export class InnerWorld extends BaseObject {
       this._deco.add(s);
     }
 
-    // --- Stockings (uniformly distributed on the full tree surface, no overlap) ---
+    // Stockings
     const sockGroup = new THREE.Group();
 
-    const cuffMat = new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.9, metalness: 0.0 });
+    const cuffMat = new THREE.MeshStandardMaterial({
+      color: 0xf2f2f2,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
 
     const makeSock = (baseColor = 0xc10f1f, accentColor = 0xffffff) => {
       const g = new THREE.Group();
-      const baseMat = new THREE.MeshStandardMaterial({ color: baseColor, roughness: 0.72, metalness: 0.0 });
-      const accentMat = new THREE.MeshStandardMaterial({ color: accentColor, roughness: 0.8, metalness: 0.0 });
+      const baseMat = new THREE.MeshStandardMaterial({
+        color: baseColor,
+        roughness: 0.72,
+        metalness: 0.0,
+      });
+      const accentMat = new THREE.MeshStandardMaterial({
+        color: accentColor,
+        roughness: 0.8,
+        metalness: 0.0,
+      });
 
-      const body = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.078, 0.028), baseMat);
-      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.050, 0.030, 0.028), baseMat);
-      const cuff = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.020, 0.032), cuffMat);
-      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.060, 0.012, 0.030), accentMat);
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.058, 0.078, 0.028),
+        baseMat,
+      );
+      const foot = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05, 0.03, 0.028),
+        baseMat,
+      );
+      const cuff = new THREE.Mesh(
+        new THREE.BoxGeometry(0.062, 0.02, 0.032),
+        cuffMat,
+      );
+      const stripe = new THREE.Mesh(
+        new THREE.BoxGeometry(0.06, 0.012, 0.03),
+        accentMat,
+      );
 
       body.position.set(0, -0.038, 0);
       foot.position.set(0.018, -0.082, 0);
@@ -628,7 +694,12 @@ export class InnerWorld extends BaseObject {
       stripe.position.set(0, -0.025, 0);
 
       g.add(body, foot, cuff, stripe);
-      g.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+      g.traverse((m) => {
+        if (m.isMesh) {
+          m.castShadow = true;
+          m.receiveShadow = true;
+        }
+      });
 
       markSwing(g, { amp: 1.4, speed: 0.9 });
       return g;
@@ -656,7 +727,7 @@ export class InnerWorld extends BaseObject {
         const jitterA = (Math.random() - 0.5) * 0.55;
 
         const t = THREE.MathUtils.clamp(tBase + jitterT, 0.16, 0.92);
-        const y = (center.y - treeH / 2) + 0.12 + t * (treeH * 0.75);
+        const y = center.y - treeH / 2 + 0.12 + t * (treeH * 0.75);
 
         // FULL 360° distribution
         const a = aBase + jitterA;
@@ -669,13 +740,13 @@ export class InnerWorld extends BaseObject {
       }
 
       if (!placedOk) {
-        // Fallback placement (still full 360°)
-        const y = (center.y - treeH / 2) + 0.12 + tBase * (treeH * 0.75);
+        // Fallback placement
+        const y = center.y - treeH / 2 + 0.12 + tBase * (treeH * 0.75);
         hit = sampleTreeSurfaceLocal(aBase, y, 0.016);
         // If fallback hit is not up-facing, nudge angle until we find an up-facing patch
         if (!isUpFacing(hit)) {
           for (let k = 0; k < 30; k++) {
-            hit = sampleTreeSurfaceLocal(aBase + (k + 1) * 0.30, y, 0.016);
+            hit = sampleTreeSurfaceLocal(aBase + (k + 1) * 0.3, y, 0.016);
             if (isUpFacing(hit)) break;
           }
         }
@@ -697,20 +768,45 @@ export class InnerWorld extends BaseObject {
 
     this._deco.add(sockGroup);
 
-    // --- Simple snowman (beside tree) ---
+    // Simple snowman (beside tree)
     const snowman = new THREE.Group();
-    const snowMat = new THREE.MeshStandardMaterial({ color: 0xf7f7f7, roughness: 0.95, metalness: 0.0 });
-    const coalMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.75, metalness: 0.0 });
-    const carrotMat = new THREE.MeshStandardMaterial({ color: 0xf07a1a, roughness: 0.65, metalness: 0.0 });
-    const coneRed = new THREE.MeshStandardMaterial({ color: 0xd91616, roughness: 0.65, metalness: 0.02 });
+    const snowMat = new THREE.MeshStandardMaterial({
+      color: 0xf7f7f7,
+      roughness: 0.95,
+      metalness: 0.0,
+    });
+    const coalMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a,
+      roughness: 0.75,
+      metalness: 0.0,
+    });
+    const carrotMat = new THREE.MeshStandardMaterial({
+      color: 0xf07a1a,
+      roughness: 0.65,
+      metalness: 0.0,
+    });
+    const coneRed = new THREE.MeshStandardMaterial({
+      color: 0xd91616,
+      roughness: 0.65,
+      metalness: 0.02,
+    });
 
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.060, 22, 16), snowMat);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.040, 22, 16), snowMat);
-    body.position.set(0, 0.060, 0);
-    head.position.set(0, 0.060 + 0.040 * 1.5, 0);
+    const body = new THREE.Mesh(
+      new THREE.SphereGeometry(0.06, 22, 16),
+      snowMat,
+    );
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.04, 22, 16),
+      snowMat,
+    );
+    body.position.set(0, 0.06, 0);
+    head.position.set(0, 0.06 + 0.04 * 1.5, 0);
 
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.038, 0.075, 18), coneRed);
-    cone.position.set(0, head.position.y + 0.040 * 1.05, 0);
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(0.038, 0.075, 18),
+      coneRed,
+    );
+    cone.position.set(0, head.position.y + 0.04 * 1.05, 0);
 
     const eyeGeo = new THREE.SphereGeometry(0.006, 12, 10);
     const eyeL = new THREE.Mesh(eyeGeo, coalMat);
@@ -718,12 +814,20 @@ export class InnerWorld extends BaseObject {
     eyeL.position.set(-0.012, head.position.y + 0.006, 0.034);
     eyeR.position.set(0.012, head.position.y + 0.006, 0.034);
 
-    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.0065, 0.040, 18), carrotMat);
+    const nose = new THREE.Mesh(
+      new THREE.ConeGeometry(0.0065, 0.04, 18),
+      carrotMat,
+    );
     nose.position.set(0, head.position.y - 0.004, 0.048);
     nose.rotation.x = Math.PI / 2;
 
     snowman.add(body, head, cone, eyeL, eyeR, nose);
-    snowman.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+    snowman.traverse((m) => {
+      if (m.isMesh) {
+        m.castShadow = true;
+        m.receiveShadow = true;
+      }
+    });
 
     // Manual placement from params
     const pSnow = this.params.snowman;
@@ -733,34 +837,65 @@ export class InnerWorld extends BaseObject {
 
     this.add(snowman);
 
-    // --- Tiny cabin (opposite side) ---
+    // Tiny cabin (opposite side)
     const cabin = new THREE.Group();
-    const wood = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.95, metalness: 0.0 });
-    const roofM = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.90, metalness: 0.0 });
-    const glass = new THREE.MeshStandardMaterial({ color: 0xffdd88, emissive: 0xffc46a, emissiveIntensity: 0.35, roughness: 0.6, metalness: 0.0 });
-    const stone = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.98, metalness: 0.0 });
+    const wood = new THREE.MeshStandardMaterial({
+      color: 0x8b5a2b,
+      roughness: 0.95,
+      metalness: 0.0,
+    });
+    const roofM = new THREE.MeshStandardMaterial({
+      color: 0xf5f5f5,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
+    const glass = new THREE.MeshStandardMaterial({
+      color: 0xffdd88,
+      emissive: 0xffc46a,
+      emissiveIntensity: 0.35,
+      roughness: 0.6,
+      metalness: 0.0,
+    });
+    const stone = new THREE.MeshStandardMaterial({
+      color: 0x444444,
+      roughness: 0.98,
+      metalness: 0.0,
+    });
 
-    const baseW = 0.12, baseH2 = 0.085, baseD = 0.11;
-    const base = new THREE.Mesh(new THREE.BoxGeometry(baseW, baseH2, baseD), wood);
+    const baseW = 0.12,
+      baseH2 = 0.085,
+      baseD = 0.11;
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(baseW, baseH2, baseD),
+      wood,
+    );
     base.position.set(0, baseH2 * 0.5, 0);
 
     const roofH = baseH2 * 0.95;
-    const roofR = Math.max(baseW, baseD) * 0.70;
+    const roofR = Math.max(baseW, baseD) * 0.7;
     const roof = new THREE.Mesh(new THREE.ConeGeometry(roofR, roofH, 4), roofM);
     roof.position.set(0, baseH2 + roofH * 0.5, 0);
     roof.rotation.y = Math.PI / 4;
 
-    const winGeo = new THREE.BoxGeometry(baseW * 0.17, baseH2 * 0.20, 0.009);
+    const winGeo = new THREE.BoxGeometry(baseW * 0.17, baseH2 * 0.2, 0.009);
     const winL = new THREE.Mesh(winGeo, glass);
     const winR = new THREE.Mesh(winGeo, glass);
     winL.position.set(-baseW * 0.24, baseH2 * 0.62, baseD * 0.505);
     winR.position.set(baseW * 0.24, baseH2 * 0.62, baseD * 0.505);
 
-    const chim = new THREE.Mesh(new THREE.BoxGeometry(baseW * 0.12, baseH2 * 0.55, baseD * 0.12), stone);
-    chim.position.set(baseW * 0.30, baseH2 + roofH * 0.55, -baseD * 0.10);
+    const chim = new THREE.Mesh(
+      new THREE.BoxGeometry(baseW * 0.12, baseH2 * 0.55, baseD * 0.12),
+      stone,
+    );
+    chim.position.set(baseW * 0.3, baseH2 + roofH * 0.55, -baseD * 0.1);
 
     cabin.add(base, roof, winL, winR, chim);
-    cabin.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+    cabin.traverse((m) => {
+      if (m.isMesh) {
+        m.castShadow = true;
+        m.receiveShadow = true;
+      }
+    });
 
     // Manual placement from params
     const pCab = this.params.cabin;
@@ -781,11 +916,15 @@ export class InnerWorld extends BaseObject {
   }
 
   update(time) {
-    let t = (typeof time === "number") ? time : 0;
+    let t = typeof time === "number" ? time : 0;
     if (t > 1000) t *= 0.001;
 
     // shader time
-    if (this._leafMat && this._leafMat.uniforms && this._leafMat.uniforms.uTime) {
+    if (
+      this._leafMat &&
+      this._leafMat.uniforms &&
+      this._leafMat.uniforms.uTime
+    ) {
       this._leafMat.uniforms.uTime.value = t;
     }
 
@@ -806,26 +945,52 @@ export class InnerWorld extends BaseObject {
     // decoration swing
     if (!this._swing || this._swing.length === 0) return;
 
-    const wind = (0.85 + 0.55 * Math.sin(t * 0.22)) * (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 0.09 + 1.2)));
+    const wind =
+      (0.85 + 0.55 * Math.sin(t * 0.22)) *
+      (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 0.09 + 1.2)));
 
     for (const obj of this._swing) {
-      if (!obj || !obj.userData || !obj.userData.__basePos || !obj.userData.__baseRot) continue;
+      if (
+        !obj ||
+        !obj.userData ||
+        !obj.userData.__basePos ||
+        !obj.userData.__baseRot
+      )
+        continue;
       const seed = obj.userData.__seed ?? 0;
       const amp = obj.userData.__amp ?? 1.0;
       const spd = obj.userData.__speed ?? 1.0;
 
       const a = t * (0.9 * spd) + seed * 0.13;
       const b = t * (1.4 * spd) + seed * 0.21;
-      const flutter = 0.20 * Math.sin(t * (3.5 * spd) + seed * 0.7) + 0.12 * Math.sin(t * (5.7 * spd) + seed * 1.3);
-      const sway = (Math.sin(a) * 0.68 + Math.sin(b) * 0.32) * wind + flutter * (0.45 + 0.55 * wind);
+      const flutter =
+        0.2 * Math.sin(t * (3.5 * spd) + seed * 0.7) +
+        0.12 * Math.sin(t * (5.7 * spd) + seed * 1.3);
+      const sway =
+        (Math.sin(a) * 0.68 + Math.sin(b) * 0.32) * wind +
+        flutter * (0.45 + 0.55 * wind);
 
-      let rz = THREE.MathUtils.clamp((0.22 * amp) * sway, -0.35, 0.35);
-      let rx = THREE.MathUtils.clamp((0.05 * amp) * (Math.sin(a + 1.7) * 0.70 + Math.sin(b + 0.9) * 0.30) * wind, -0.18, 0.18);
-      let ry = THREE.MathUtils.clamp((0.035 * amp) * (Math.sin(a + 0.3) * 0.55 + Math.sin(b + 2.2) * 0.45) * wind, -0.22, 0.22);
+      let rz = THREE.MathUtils.clamp(0.22 * amp * sway, -0.35, 0.35);
+      let rx = THREE.MathUtils.clamp(
+        0.05 * amp * (Math.sin(a + 1.7) * 0.7 + Math.sin(b + 0.9) * 0.3) * wind,
+        -0.18,
+        0.18,
+      );
+      let ry = THREE.MathUtils.clamp(
+        0.035 *
+          amp *
+          (Math.sin(a + 0.3) * 0.55 + Math.sin(b + 2.2) * 0.45) *
+          wind,
+        -0.22,
+        0.22,
+      );
 
-      const py = (0.0020) * (Math.sin(a + 0.6) * 0.6 + Math.sin(b + 2.1) * 0.4) * (0.6 + 0.4 * wind);
-      const px = (0.010) * Math.sin(rz) * (0.6 + 0.4 * wind);
-      const pz = (0.006) * Math.sin(rz + 0.7) * (0.6 + 0.4 * wind);
+      const py =
+        0.002 *
+        (Math.sin(a + 0.6) * 0.6 + Math.sin(b + 2.1) * 0.4) *
+        (0.6 + 0.4 * wind);
+      const px = 0.01 * Math.sin(rz) * (0.6 + 0.4 * wind);
+      const pz = 0.006 * Math.sin(rz + 0.7) * (0.6 + 0.4 * wind);
 
       obj.position.copy(obj.userData.__basePos);
       obj.position.x += px;

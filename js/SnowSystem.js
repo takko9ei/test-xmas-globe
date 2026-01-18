@@ -11,7 +11,7 @@ export class SnowSystem extends BaseObject {
       sphereRadius: 0.95,
       sphereCenter: new THREE.Vector3(0, 0, 0),
       particleSpeed: 0.003,
-      particleSize: 0.020,
+      particleSize: 0.02,
       color: new THREE.Color(0xffffff),
       brightness: 1.9,
     };
@@ -21,7 +21,7 @@ export class SnowSystem extends BaseObject {
     // Use a plane, but with a snowflake alpha texture so the visible shape is ❄️ (not a square)
     const geometry = new THREE.PlaneGeometry(
       this.params.particleSize,
-      this.params.particleSize
+      this.params.particleSize,
     );
 
     // Use centralized material definition
@@ -34,7 +34,7 @@ export class SnowSystem extends BaseObject {
     // Particle data
     this.particles = [];
 
-    // === Optimization: Pre-allocate reusable objects ===
+    // Optimization: Pre-allocate reusable objects
     // These objects are reused every frame to avoid Garbage Collection (GC)
     this._dummy = new THREE.Object3D();
     this._tempPos = new THREE.Vector3();
@@ -61,7 +61,6 @@ export class SnowSystem extends BaseObject {
     this._snowflakeTexture = this.material.map;
   }
 
-
   // Generate a particle inside hard-defined sphere
   generateParticle(p, initial = false) {
     const { sphereRadius, sphereCenter, particleSpeed } = this.params;
@@ -77,7 +76,7 @@ export class SnowSystem extends BaseObject {
       pos.set(
         r * Math.sin(phi) * Math.cos(theta),
         r * Math.cos(phi),
-        r * Math.sin(phi) * Math.sin(theta)
+        r * Math.sin(phi) * Math.sin(theta),
       );
     } else {
       // spawn them in the top 20% of the sphere volume
@@ -105,7 +104,7 @@ export class SnowSystem extends BaseObject {
     p.velocity.set(
       (Math.random() - 0.5) * speed * 0.5,
       -(speed + Math.random() * speed * 0.5),
-      (Math.random() - 0.5) * speed * 0.5
+      (Math.random() - 0.5) * speed * 0.5,
     );
 
     // rotation
@@ -113,14 +112,14 @@ export class SnowSystem extends BaseObject {
     p.rotation.set(
       Math.random() * Math.PI,
       Math.random() * Math.PI,
-      Math.random() * Math.PI
+      Math.random() * Math.PI,
     );
 
     if (!p.rotSpeed) p.rotSpeed = new THREE.Euler();
     p.rotSpeed.set(
       (Math.random() - 0.5) * 0.1,
       (Math.random() - 0.5) * 0.1,
-      (Math.random() - 0.5) * 0.1
+      (Math.random() - 0.5) * 0.1,
     );
 
     // Reset inertia
@@ -144,11 +143,10 @@ export class SnowSystem extends BaseObject {
   update(time) {
     if (!this.mesh) return;
 
-
     const { sphereRadius, sphereCenter } = this.params;
     const radiusSq = sphereRadius * sphereRadius;
 
-    // --- Window Drag Logic (Optimized) ---
+    // Window Drag Logic (Optimized)
     /* 
     // OLD LOGIC (Commented out for performance)
     // window drag
@@ -181,7 +179,7 @@ export class SnowSystem extends BaseObject {
     this.lastWindowSize.copy(currentWindowSize);
     */
 
-    // Safely check for window properties to avoid crashes on mobile/iframe
+    // check for window properties to avoid crashes on mobile/iframe
     const screenX = typeof window.screenX === "number" ? window.screenX : 0;
     const screenY = typeof window.screenY === "number" ? window.screenY : 0;
     const outerW = window.outerWidth || window.innerWidth;
@@ -214,7 +212,7 @@ export class SnowSystem extends BaseObject {
     this._lastScreenPos.copy(this._currentScreenPos);
     this._lastWindowSize.copy(this._currentWindowSize);
 
-    // --- Camera Basis Calculation ---
+    // Camera Basis Calculation
     const camera = arguments[1]; // Expected to be passed from main.js
 
     this._cameraRight.set(1, 0, 0);
@@ -224,7 +222,6 @@ export class SnowSystem extends BaseObject {
       // Re-use logic: extractRotation avoids creating new Matrix4 if we trust camera.matrixWorld
       // But extractRotation returns a new Matrix4.
       // Better: access elements directly or use a shared matrix if extremely critical.
-      // For now, let's just use the camera's world direction vectors simpler.
 
       // Standard way without generating garbage every frame:
       // We can interpret the rotation matrix columns directly.
@@ -242,14 +239,14 @@ export class SnowSystem extends BaseObject {
     this._inertiaForce.set(0, 0, 0);
     this._inertiaForce.addScaledVector(
       this._cameraRight,
-      this._deltaMove.x * conversionFactor
+      this._deltaMove.x * conversionFactor,
     );
     this._inertiaForce.addScaledVector(
       this._cameraUp,
-      -this._deltaMove.y * conversionFactor
+      -this._deltaMove.y * conversionFactor,
     );
 
-    // --- Particle Loop ---
+    // Particle Loop
     /*
     // old loop(massive GC)
     const dummy = new THREE.Object3D(); // Created locally in old version

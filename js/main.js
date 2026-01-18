@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
 // imports
 import { BaseStand } from "./BaseStand.js";
@@ -15,12 +16,12 @@ const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  100
+  100,
 );
 camera.position.z = 5;
 const isMobile =
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
+    navigator.userAgent,
   );
 const maxPixelRatio = isMobile ? 1.5 : 2.0;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -79,6 +80,39 @@ classesToLoad.forEach((ClassRef) => {
   scene.add(instance);
   myObjects.push(instance);
 });
+
+// Setup GUI
+const lights = myObjects.find((obj) => obj instanceof Lights);
+if (lights) {
+  const gui = new GUI();
+
+  // Light 1 (Main)
+  const f1 = gui.addFolder("ライト1");
+  f1.addColor(lights.mainLight, "color").name("カラー");
+  f1.add(lights.mainLight, "intensity", 0, 30).name("明るさ");
+  const p1 = f1.addFolder("位置");
+  p1.add(lights.mainLight.position, "x", -5, 5);
+  p1.add(lights.mainLight.position, "y", -5, 5);
+  p1.add(lights.mainLight.position, "z", -5, 5);
+
+  // Light 2 (Fill)
+  const f2 = gui.addFolder("ライト2");
+  f2.addColor(lights.fillLight, "color").name("カラー");
+  f2.add(lights.fillLight, "intensity", 0, 30).name("明るさ");
+  const p2 = f2.addFolder("位置");
+  p2.add(lights.fillLight.position, "x", -5, 5);
+  p2.add(lights.fillLight.position, "y", -5, 5);
+  p2.add(lights.fillLight.position, "z", -5, 5);
+
+  // Light 3 (Rim)
+  const f3 = gui.addFolder("ライト3");
+  f3.addColor(lights.rimLight, "color").name("カラー");
+  f3.add(lights.rimLight, "intensity", 0, 30).name("明るさ");
+  const p3 = f3.addFolder("位置");
+  p3.add(lights.rimLight.position, "x", -5, 5);
+  p3.add(lights.rimLight.position, "y", -5, 5);
+  p3.add(lights.rimLight.position, "z", -5, 5);
+}
 
 // Render loop
 function animate(time) {

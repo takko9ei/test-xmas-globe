@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -17,6 +17,43 @@
       }
       canvas {
         display: block;
+      }
+
+      /* Custom GUI Styling */
+      .lil-gui {
+        --background-color: rgba(20, 20, 25, 0.8);
+        --text-color: #e0e0e0;
+        --title-background-color: rgba(40, 40, 50, 0.9);
+        --widget-color: #4a4a55;
+        --hover-color: #5a5a65;
+        --focus-color: #6a6a75;
+        --number-color: #64d9ff;
+        --string-color: #a2ff00;
+
+        font-family: "Inter", "Segoe UI", Roboto, sans-serif !important;
+        font-size: 13px !important;
+        border-radius: 12px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .lil-gui.root {
+        top: 20px !important;
+        right: 20px !important;
+      }
+
+      .lil-gui .title {
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        font-weight: 600;
+        color: #ffb366; /* Accent color matching Main Light */
+      }
+
+      .lil-gui .children {
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
       }
     </style>
     <script type="importmap">

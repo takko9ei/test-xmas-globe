@@ -2,53 +2,28 @@ import * as THREE from "three";
 import { BaseObject } from "./BaseObject.js";
 
 export class Lights extends BaseObject {
-    init() {
-        console.log("Lights: loading...");
+  init() {
+    console.log("Lights: loading...");
 
-        // --- Ambient light (NEW) ---
-        const ambientLight = new THREE.AmbientLight(
-            0xffffff, // neutral white
-            0.3       // low intensity so it doesn't flatten lighting
-        );
-        this.add(ambientLight);
+    // Main Light
+    this.mainLight = new THREE.PointLight(0xff8000, 11.6, 10);
+    this.mainLight.position.set(-2.04, 0.8, 1.5);
+    this.add(this.mainLight);
 
-        // Spotlight setup
-        this.spotlight = new THREE.SpotLight(
-            0xff0000,     // initial color
-            0,            // start at zero intensity
-            25,           // distance
-            Math.PI / 6,  // cone angle
-            0.35,         // penumbra
-            1.0           // decay
-        );
+    // Fill Light
+    this.fillLight = new THREE.PointLight(0x00d1d7, 5.2, 8);
+    this.fillLight.position.set(2.88, 0.42, 1.5);
+    this.add(this.fillLight);
 
-        // Position above the snow globe
-        this.spotlight.position.set(0, 6, 6);
-        this.spotlight.target.position.set(0, 0, 0);
+    // Rim Light
+    this.rimLight = new THREE.PointLight(0xdb00db, 11.6, 6);
+    this.rimLight.position.set(-0.94, 0.98, -1.22);
+    this.add(this.rimLight);
 
-        this.add(this.spotlight);
-        this.add(this.spotlight.target);
+    console.log("Lights: loaded.");
+  }
 
-        // Animation parameters
-        this.maxIntensity = 20;
-        this.blinkSpeed = 1.0;  // red/green switching speed
-        this.fadeSpeed = 1.0;   // dim/bright speed
-
-        console.log("Lights: loaded.");
-    }
-
-    update(time) {
-        // --- Color blinking ---
-        const s = Math.sin(time * this.fadeSpeed);
-
-        // Intensity: smooth fade from 0 → max → 0
-        this.spotlight.intensity = Math.abs(s) * this.maxIntensity;
-
-        // Color: one full sine per color
-        if (s >= 0.0) {
-            this.spotlight.color.set(0xff0000); // red
-        } else {
-            this.spotlight.color.set(0x00ff00); // green
-        }
-    }
+  update(time) {
+    // No animation needed
+  }
 }

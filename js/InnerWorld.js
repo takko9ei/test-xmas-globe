@@ -417,7 +417,10 @@ export class InnerWorld extends BaseObject {
   }
 
   _buildDecorations(tree, treeWorldBox) {
-    if (this._deco) tree.remove(this._deco);
+    if (this._deco) {
+      this._disposeNode(this._deco);
+      tree.remove(this._deco);
+    }
     this._deco = new THREE.Group();
     this._deco.renderOrder = 10;
     this._swing = [];

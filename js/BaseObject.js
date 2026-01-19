@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 
 // This is the base class for all objects in the scene
 // Implemented by Li Zhuohang, do not modify this file

@@ -54,7 +54,6 @@ I have designed the project using a **Modular Structure**. Please only edit the 
 
 ### File Structure
 
-
 ```text
 project/
 ├── index.html          # [DO NOT EDIT] The entry point

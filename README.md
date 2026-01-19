@@ -6,7 +6,6 @@ A beautiful, interactive 3D Christmas Snow Globe built with Three.js. This proje
 
 <img width="3199" height="1718" alt="image" src="https://github.com/user-attachments/assets/b9079dde-7304-46d0-ae22-0fe0cd329f9e" />
 
-
 ---
 
 ## 🇬🇧 English

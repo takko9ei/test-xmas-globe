@@ -1,16 +1,16 @@
-import * as THREE from "three";
-import { BaseObject } from "./BaseObject.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import * as THREE from 'three';
+import { BaseObject } from './BaseObject.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export class GlobeGlass extends BaseObject {
   init() {
-    console.log("GlobeGlass: loading...");
+    console.log('GlobeGlass: loading...');
 
     const loader = new GLTFLoader();
 
     // Load the globe model
     loader.load(
-      "./assets/models/globe-edited.glb",
+      './assets/models/globe-edited.glb',
       (gltf) => {
         this.model = gltf.scene;
 
@@ -37,15 +37,13 @@ export class GlobeGlass extends BaseObject {
         });
 
         this.add(this.model);
-        console.log("GlobeGlass: loaded.");
+        console.log('GlobeGlass: loaded.');
       },
       (xhr) => {
-        console.log(
-          "Xhr for GlobeGlass: " + (xhr.loaded / xhr.total) * 100 + "% loaded",
-        );
+        console.log('Xhr for GlobeGlass: ' + (xhr.loaded / xhr.total) * 100 + '% loaded');
       },
       (error) => {
-        console.error("An error occurred loading the globe model", error);
+        console.error('An error occurred loading the globe model', error);
       },
     );
   }

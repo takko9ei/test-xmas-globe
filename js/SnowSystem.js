@@ -1,10 +1,10 @@
-import * as THREE from "three";
-import { BaseObject } from "./BaseObject.js";
-import { createGlitterMaterial } from "./GlitterAppearance.js";
+import * as THREE from 'three';
+import { BaseObject } from './BaseObject.js';
+import { createGlitterMaterial } from './GlitterAppearance.js';
 
 export class SnowSystem extends BaseObject {
   init() {
-    console.log("SnowSystem init");
+    console.log('SnowSystem init');
 
     // exposed params
     this.params = {
@@ -19,10 +19,7 @@ export class SnowSystem extends BaseObject {
     this.count = 1500;
 
     // Use a plane, but with a snowflake alpha texture so the visible shape is ❄️ (not a square)
-    const geometry = new THREE.PlaneGeometry(
-      this.params.particleSize,
-      this.params.particleSize,
-    );
+    const geometry = new THREE.PlaneGeometry(this.params.particleSize, this.params.particleSize);
 
     // Use centralized material definition
     this.material = createGlitterMaterial({ color: this.params.color });
@@ -73,11 +70,7 @@ export class SnowSystem extends BaseObject {
       const theta = Math.random() * 2 * Math.PI;
       const phi = Math.acos(2 * Math.random() - 1);
 
-      pos.set(
-        r * Math.sin(phi) * Math.cos(theta),
-        r * Math.cos(phi),
-        r * Math.sin(phi) * Math.sin(theta),
-      );
+      pos.set(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta));
     } else {
       // spawn them in the top 20% of the sphere volume
       const rVal = sphereRadius;
@@ -109,18 +102,10 @@ export class SnowSystem extends BaseObject {
 
     // rotation
     if (!p.rotation) p.rotation = new THREE.Euler();
-    p.rotation.set(
-      Math.random() * Math.PI,
-      Math.random() * Math.PI,
-      Math.random() * Math.PI,
-    );
+    p.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
 
     if (!p.rotSpeed) p.rotSpeed = new THREE.Euler();
-    p.rotSpeed.set(
-      (Math.random() - 0.5) * 0.1,
-      (Math.random() - 0.5) * 0.1,
-      (Math.random() - 0.5) * 0.1,
-    );
+    p.rotSpeed.set((Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.1, (Math.random() - 0.5) * 0.1);
 
     // Reset inertia
     if (!p.inertialVelocity) p.inertialVelocity = new THREE.Vector3();
@@ -180,8 +165,8 @@ export class SnowSystem extends BaseObject {
     */
 
     // check for window properties to avoid crashes on mobile/iframe
-    const screenX = typeof window.screenX === "number" ? window.screenX : 0;
-    const screenY = typeof window.screenY === "number" ? window.screenY : 0;
+    const screenX = typeof window.screenX === 'number' ? window.screenX : 0;
+    const screenY = typeof window.screenY === 'number' ? window.screenY : 0;
     const outerW = window.outerWidth || window.innerWidth;
     const outerH = window.outerHeight || window.innerHeight;
 
@@ -201,8 +186,7 @@ export class SnowSystem extends BaseObject {
     // And ensure coordinates are valid numbers (not NaN)
     const isValid = !isNaN(screenX) && !isNaN(screenY);
     const isSameSize =
-      this._currentWindowSize.x === this._lastWindowSize.x &&
-      this._currentWindowSize.y === this._lastWindowSize.y;
+      this._currentWindowSize.x === this._lastWindowSize.x && this._currentWindowSize.y === this._lastWindowSize.y;
 
     if (isValid && isSameSize) {
       this._deltaMove.subVectors(this._currentScreenPos, this._lastScreenPos);
@@ -237,14 +221,8 @@ export class SnowSystem extends BaseObject {
 
     // this._inertiaForce = (Right * delta.x) + (Up * -delta.y)
     this._inertiaForce.set(0, 0, 0);
-    this._inertiaForce.addScaledVector(
-      this._cameraRight,
-      this._deltaMove.x * conversionFactor,
-    );
-    this._inertiaForce.addScaledVector(
-      this._cameraUp,
-      -this._deltaMove.y * conversionFactor,
-    );
+    this._inertiaForce.addScaledVector(this._cameraRight, this._deltaMove.x * conversionFactor);
+    this._inertiaForce.addScaledVector(this._cameraUp, -this._deltaMove.y * conversionFactor);
 
     // Particle Loop
     /*

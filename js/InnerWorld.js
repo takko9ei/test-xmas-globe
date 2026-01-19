@@ -1,6 +1,6 @@
-import * as THREE from "three";
-import { BaseObject } from "./BaseObject.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import * as THREE from 'three';
+import { BaseObject } from './BaseObject.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export class InnerWorld extends BaseObject {
   tree = null;
@@ -12,7 +12,7 @@ export class InnerWorld extends BaseObject {
   _swing = []; // swingable objects
 
   init() {
-    console.log("InnerWorld: loading...");
+    console.log('InnerWorld: loading...');
 
     try {
       this.params = {
@@ -111,7 +111,7 @@ export class InnerWorld extends BaseObject {
           // We compute wind offset on 'position' and update 'transformed'
           // Then we verify vCustomWorldPos is set for the fragment shader
           shader.vertexShader = shader.vertexShader.replace(
-            "#include <begin_vertex>",
+            '#include <begin_vertex>',
             `
               vec3 transformed = vec3( position );
               
@@ -153,7 +153,7 @@ export class InnerWorld extends BaseObject {
 
           // Modulate diffuseColor (after map sampling)
           shader.fragmentShader = shader.fragmentShader.replace(
-            "#include <map_fragment>",
+            '#include <map_fragment>',
             `
               #include <map_fragment>
 
@@ -198,10 +198,10 @@ export class InnerWorld extends BaseObject {
       };
 
       // Texture
-      const treeTex = texLoader.load("./assets/textures/xmas_tree.jpeg");
+      const treeTex = texLoader.load('./assets/textures/xmas_tree.jpeg');
       treeTex.flipY = false;
       // three.js version compatibility: newer uses colorSpace, older uses encoding
-      if ("colorSpace" in treeTex && THREE.SRGBColorSpace) {
+      if ('colorSpace' in treeTex && THREE.SRGBColorSpace) {
         treeTex.colorSpace = THREE.SRGBColorSpace;
       } else {
         treeTex.encoding = THREE.sRGBEncoding;
@@ -233,18 +233,13 @@ export class InnerWorld extends BaseObject {
                 const toRemove = [];
                 tree.traverse((obj) => {
                   if (!obj || !obj.isMesh) return;
-                  const name =
-                    typeof obj.name === "string" ? obj.name.toLowerCase() : "";
-                  const nameHit =
-                    /ball|bauble|ornament|orn|sphere|deco|decoration/.test(
-                      name,
-                    );
+                  const name = typeof obj.name === 'string' ? obj.name.toLowerCase() : '';
+                  const nameHit = /ball|bauble|ornament|orn|sphere|deco|decoration/.test(name);
 
                   // Size heuristic: small-ish meshes are likely ornaments (tree itself is much larger)
                   let smallHit = false;
                   if (obj.geometry) {
-                    if (!obj.geometry.boundingBox)
-                      obj.geometry.computeBoundingBox();
+                    if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
                     if (obj.geometry.boundingBox) {
                       const bb = obj.geometry.boundingBox;
                       const sx = bb.max.x - bb.min.x;
@@ -262,23 +257,18 @@ export class InnerWorld extends BaseObject {
                   if (m.parent) m.parent.remove(m);
                   if (m.geometry) m.geometry.dispose();
                   if (m.material) {
-                    if (Array.isArray(m.material))
-                      m.material.forEach((mm) => mm.dispose());
+                    if (Array.isArray(m.material)) m.material.forEach((mm) => mm.dispose());
                     else m.material.dispose();
                   }
                 }
                 if (toRemove.length)
-                  console.log(
-                    `InnerWorld: removed ${toRemove.length} baked-in ornament mesh(es) from GLB.`,
-                  );
+                  console.log(`InnerWorld: removed ${toRemove.length} baked-in ornament mesh(es) from GLB.`);
               };
               removeBuiltinOrnaments();
 
               // Ensure we have a leaf shader material; if not, recreate it quickly.
               if (!this._leafMat) {
-                console.warn(
-                  "InnerWorld: _leafMat was null at tree load time. Recreating leaf shader material...",
-                );
+                console.warn('InnerWorld: _leafMat was null at tree load time. Recreating leaf shader material...');
                 this._leafMat = makeLeafMat(treeTex, this._noiseTex);
               }
 
@@ -295,20 +285,17 @@ export class InnerWorld extends BaseObject {
                 // Some exports can have null materials; always ensure there's a material.
                 if (!child.material) child.material = fallbackTreeMat;
 
-                const n =
-                  typeof child.name === "string"
-                    ? child.name.toLowerCase()
-                    : "";
+                const n = typeof child.name === 'string' ? child.name.toLowerCase() : '';
                 let exclude =
-                  n.includes("trunk") ||
-                  n.includes("bark") ||
-                  n.includes("stem") ||
-                  n.includes("star") ||
-                  n.includes("orn") ||
-                  n.includes("ball") ||
-                  n.includes("sock") ||
-                  n.includes("ribbon") ||
-                  n.includes("gift");
+                  n.includes('trunk') ||
+                  n.includes('bark') ||
+                  n.includes('stem') ||
+                  n.includes('star') ||
+                  n.includes('orn') ||
+                  n.includes('ball') ||
+                  n.includes('sock') ||
+                  n.includes('ribbon') ||
+                  n.includes('gift');
                 if (forceAll) exclude = false;
 
                 if (!exclude && this._leafMat) {
@@ -353,19 +340,13 @@ export class InnerWorld extends BaseObject {
               try {
                 this._buildDecorations(tree, wb);
               } catch (decoErr) {
-                console.error(
-                  "InnerWorld: decorations crashed; showing tree without decorations:",
-                  decoErr,
-                );
+                console.error('InnerWorld: decorations crashed; showing tree without decorations:', decoErr);
               }
 
               this.add(tree);
-              console.log("InnerWorld: tree loaded from", url);
+              console.log('InnerWorld: tree loaded from', url);
             } catch (err) {
-              console.error(
-                "InnerWorld: tree loaded but processing crashed. Showing fallback tree:",
-                err,
-              );
+              console.error('InnerWorld: tree loaded but processing crashed. Showing fallback tree:', err);
               const tree = gltf.scene;
               tree.position.set(0, -0.06, 0);
               tree.traverse((c) => {
@@ -381,21 +362,17 @@ export class InnerWorld extends BaseObject {
           },
           undefined,
           (e) => {
-            console.error(
-              "InnerWorld: tree load failed (network error OR exception in success handler):",
-              url,
-              e,
-            );
+            console.error('InnerWorld: tree load failed (network error OR exception in success handler):', url, e);
           },
         );
       };
 
       // Load the actual tree model in this repo
-      loadTree("./assets/models/tree-edited.glb");
+      loadTree('./assets/models/tree-edited.glb');
 
       // 2) Load Ground
       loader.load(
-        "./assets/models/ground.glb",
+        './assets/models/ground.glb',
         (gltf) => {
           const ground = gltf.scene;
           // Do NOT remove the debug placeholder here; only remove when tree loads.
@@ -403,16 +380,13 @@ export class InnerWorld extends BaseObject {
           ground.position.copy(this.params.ground.position);
           ground.scale.copy(this.params.ground.scale);
           this.add(ground);
-          console.log("InnerWorld: ground loaded.");
+          console.log('InnerWorld: ground loaded.');
         },
         undefined,
-        (e) => console.error("An error occurred loading the ground model", e),
+        (e) => console.error('An error occurred loading the ground model', e),
       );
     } catch (err) {
-      console.error(
-        "InnerWorld:init crashed (this would make the whole inner world disappear):",
-        err,
-      );
+      console.error('InnerWorld:init crashed (this would make the whole inner world disappear):', err);
     }
   }
 
@@ -671,22 +645,10 @@ export class InnerWorld extends BaseObject {
         metalness: 0.0,
       });
 
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.058, 0.078, 0.028),
-        baseMat,
-      );
-      const foot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.05, 0.03, 0.028),
-        baseMat,
-      );
-      const cuff = new THREE.Mesh(
-        new THREE.BoxGeometry(0.062, 0.02, 0.032),
-        cuffMat,
-      );
-      const stripe = new THREE.Mesh(
-        new THREE.BoxGeometry(0.06, 0.012, 0.03),
-        accentMat,
-      );
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.078, 0.028), baseMat);
+      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.03, 0.028), baseMat);
+      const cuff = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.02, 0.032), cuffMat);
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.012, 0.03), accentMat);
 
       body.position.set(0, -0.038, 0);
       foot.position.set(0.018, -0.082, 0);
@@ -791,21 +753,12 @@ export class InnerWorld extends BaseObject {
       metalness: 0.02,
     });
 
-    const body = new THREE.Mesh(
-      new THREE.SphereGeometry(0.06, 22, 16),
-      snowMat,
-    );
-    const head = new THREE.Mesh(
-      new THREE.SphereGeometry(0.04, 22, 16),
-      snowMat,
-    );
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.06, 22, 16), snowMat);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.04, 22, 16), snowMat);
     body.position.set(0, 0.06, 0);
     head.position.set(0, 0.06 + 0.04 * 1.5, 0);
 
-    const cone = new THREE.Mesh(
-      new THREE.ConeGeometry(0.038, 0.075, 18),
-      coneRed,
-    );
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.038, 0.075, 18), coneRed);
     cone.position.set(0, head.position.y + 0.04 * 1.05, 0);
 
     const eyeGeo = new THREE.SphereGeometry(0.006, 12, 10);
@@ -814,10 +767,7 @@ export class InnerWorld extends BaseObject {
     eyeL.position.set(-0.012, head.position.y + 0.006, 0.034);
     eyeR.position.set(0.012, head.position.y + 0.006, 0.034);
 
-    const nose = new THREE.Mesh(
-      new THREE.ConeGeometry(0.0065, 0.04, 18),
-      carrotMat,
-    );
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.0065, 0.04, 18), carrotMat);
     nose.position.set(0, head.position.y - 0.004, 0.048);
     nose.rotation.x = Math.PI / 2;
 
@@ -865,10 +815,7 @@ export class InnerWorld extends BaseObject {
     const baseW = 0.12,
       baseH2 = 0.085,
       baseD = 0.11;
-    const base = new THREE.Mesh(
-      new THREE.BoxGeometry(baseW, baseH2, baseD),
-      wood,
-    );
+    const base = new THREE.Mesh(new THREE.BoxGeometry(baseW, baseH2, baseD), wood);
     base.position.set(0, baseH2 * 0.5, 0);
 
     const roofH = baseH2 * 0.95;
@@ -883,10 +830,7 @@ export class InnerWorld extends BaseObject {
     winL.position.set(-baseW * 0.24, baseH2 * 0.62, baseD * 0.505);
     winR.position.set(baseW * 0.24, baseH2 * 0.62, baseD * 0.505);
 
-    const chim = new THREE.Mesh(
-      new THREE.BoxGeometry(baseW * 0.12, baseH2 * 0.55, baseD * 0.12),
-      stone,
-    );
+    const chim = new THREE.Mesh(new THREE.BoxGeometry(baseW * 0.12, baseH2 * 0.55, baseD * 0.12), stone);
     chim.position.set(baseW * 0.3, baseH2 + roofH * 0.55, -baseD * 0.1);
 
     cabin.add(base, roof, winL, winR, chim);
@@ -916,15 +860,11 @@ export class InnerWorld extends BaseObject {
   }
 
   update(time) {
-    let t = typeof time === "number" ? time : 0;
+    let t = typeof time === 'number' ? time : 0;
     if (t > 1000) t *= 0.001;
 
     // shader time
-    if (
-      this._leafMat &&
-      this._leafMat.uniforms &&
-      this._leafMat.uniforms.uTime
-    ) {
+    if (this._leafMat && this._leafMat.uniforms && this._leafMat.uniforms.uTime) {
       this._leafMat.uniforms.uTime.value = t;
     }
 
@@ -945,30 +885,18 @@ export class InnerWorld extends BaseObject {
     // decoration swing
     if (!this._swing || this._swing.length === 0) return;
 
-    const wind =
-      (0.85 + 0.55 * Math.sin(t * 0.22)) *
-      (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 0.09 + 1.2)));
+    const wind = (0.85 + 0.55 * Math.sin(t * 0.22)) * (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 0.09 + 1.2)));
 
     for (const obj of this._swing) {
-      if (
-        !obj ||
-        !obj.userData ||
-        !obj.userData.__basePos ||
-        !obj.userData.__baseRot
-      )
-        continue;
+      if (!obj || !obj.userData || !obj.userData.__basePos || !obj.userData.__baseRot) continue;
       const seed = obj.userData.__seed ?? 0;
       const amp = obj.userData.__amp ?? 1.0;
       const spd = obj.userData.__speed ?? 1.0;
 
       const a = t * (0.9 * spd) + seed * 0.13;
       const b = t * (1.4 * spd) + seed * 0.21;
-      const flutter =
-        0.2 * Math.sin(t * (3.5 * spd) + seed * 0.7) +
-        0.12 * Math.sin(t * (5.7 * spd) + seed * 1.3);
-      const sway =
-        (Math.sin(a) * 0.68 + Math.sin(b) * 0.32) * wind +
-        flutter * (0.45 + 0.55 * wind);
+      const flutter = 0.2 * Math.sin(t * (3.5 * spd) + seed * 0.7) + 0.12 * Math.sin(t * (5.7 * spd) + seed * 1.3);
+      const sway = (Math.sin(a) * 0.68 + Math.sin(b) * 0.32) * wind + flutter * (0.45 + 0.55 * wind);
 
       let rz = THREE.MathUtils.clamp(0.22 * amp * sway, -0.35, 0.35);
       let rx = THREE.MathUtils.clamp(
@@ -977,18 +905,12 @@ export class InnerWorld extends BaseObject {
         0.18,
       );
       let ry = THREE.MathUtils.clamp(
-        0.035 *
-          amp *
-          (Math.sin(a + 0.3) * 0.55 + Math.sin(b + 2.2) * 0.45) *
-          wind,
+        0.035 * amp * (Math.sin(a + 0.3) * 0.55 + Math.sin(b + 2.2) * 0.45) * wind,
         -0.22,
         0.22,
       );
 
-      const py =
-        0.002 *
-        (Math.sin(a + 0.6) * 0.6 + Math.sin(b + 2.1) * 0.4) *
-        (0.6 + 0.4 * wind);
+      const py = 0.002 * (Math.sin(a + 0.6) * 0.6 + Math.sin(b + 2.1) * 0.4) * (0.6 + 0.4 * wind);
       const px = 0.01 * Math.sin(rz) * (0.6 + 0.4 * wind);
       const pz = 0.006 * Math.sin(rz + 0.7) * (0.6 + 0.4 * wind);
 

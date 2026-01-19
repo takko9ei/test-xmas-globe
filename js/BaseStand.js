@@ -1,21 +1,21 @@
-import * as THREE from "three";
-import { BaseObject } from "./BaseObject.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import * as THREE from 'three';
+import { BaseObject } from './BaseObject.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export class BaseStand extends BaseObject {
   init() {
-    console.log("BaseStand: loading...");
+    console.log('BaseStand: loading...');
 
     const loader = new GLTFLoader();
     const textureLoader = new THREE.TextureLoader();
 
     // Load Texture
-    const texture = textureLoader.load("./assets/textures/basement.jpg");
+    const texture = textureLoader.load('./assets/textures/basement.jpg');
     texture.flipY = false; // GLTF models usually expect flipY to be false
 
     // Load Model
     loader.load(
-      "./assets/models/basement.glb",
+      './assets/models/basement.glb',
       (gltf) => {
         const model = gltf.scene;
 
@@ -26,12 +26,12 @@ export class BaseStand extends BaseObject {
           }
         });
         this.add(model);
-        console.log("BaseStand: loaded.");
+        console.log('BaseStand: loaded.');
       },
       undefined,
       (error) => {
-        console.error("An error occurred loading the basement model", error);
-      }
+        console.error('An error occurred loading the basement model', error);
+      },
     );
   }
 }

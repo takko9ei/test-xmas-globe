@@ -1,9 +1,9 @@
-import * as THREE from "three";
-import { BaseObject } from "./BaseObject.js";
+import * as THREE from 'three';
+import { BaseObject } from './BaseObject.js';
 
 export class Lights extends BaseObject {
   init() {
-    console.log("Lights: loading...");
+    console.log('Lights: loading...');
 
     // Main Light
     this.mainLight = new THREE.PointLight(0xff8000, 11.6, 10);
@@ -20,7 +20,7 @@ export class Lights extends BaseObject {
     this.rimLight.position.set(-0.94, 0.98, -1.22);
     this.add(this.rimLight);
 
-    console.log("Lights: loaded.");
+    console.log('Lights: loaded.');
   }
 
   update(time) {

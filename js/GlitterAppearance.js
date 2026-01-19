@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 
 const textureCache = {};
 
@@ -28,10 +28,10 @@ export function createGlitterMaterial(options = {}) {
 }
 
 function createSnowflakeTexture(size = 128) {
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d');
 
   // Clear with transparent background
   ctx.clearRect(0, 0, size, size);
@@ -42,9 +42,9 @@ function createSnowflakeTexture(size = 128) {
 
   // Soft core glow
   const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.9);
-  core.addColorStop(0.0, "rgba(255,255,255,1.0)");
-  core.addColorStop(0.35, "rgba(255,255,255,0.95)");
-  core.addColorStop(1.0, "rgba(255,255,255,0.0)");
+  core.addColorStop(0.0, 'rgba(255,255,255,1.0)');
+  core.addColorStop(0.35, 'rgba(255,255,255,0.95)');
+  core.addColorStop(1.0, 'rgba(255,255,255,0.0)');
   ctx.fillStyle = core;
   ctx.beginPath();
   ctx.arc(cx, cy, R * 0.85, 0, Math.PI * 2);
@@ -53,9 +53,9 @@ function createSnowflakeTexture(size = 128) {
   // Draw a 6-arm snowflake with small branches
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.strokeStyle = "rgba(255,255,255,0.98)";
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
+  ctx.strokeStyle = 'rgba(255,255,255,0.98)';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   const mainW = Math.max(1.2, size * 0.035);
   const branchW = Math.max(1.0, size * 0.022);
@@ -106,7 +106,7 @@ function createSnowflakeTexture(size = 128) {
   }
 
   // Center dot
-  ctx.fillStyle = "rgba(255,255,255,0.98)";
+  ctx.fillStyle = 'rgba(255,255,255,0.98)';
   ctx.beginPath();
   ctx.arc(0, 0, Math.max(1.0, size * 0.03), 0, Math.PI * 2);
   ctx.fill();

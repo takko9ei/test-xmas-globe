@@ -1,10 +1,10 @@
-import * as THREE from "three";
-import { BaseObject } from "./BaseObject.js";
-import { EXRLoader } from "three/addons/loaders/EXRLoader.js";
+import * as THREE from 'three';
+import { BaseObject } from './BaseObject.js';
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
 
 export class EnvironmentSystem extends BaseObject {
   init() {
-    console.log("EnvironmentSystem: loading...");
+    console.log('EnvironmentSystem: loading...');
 
     // This model is implemented by Li Zhuohang
     // If you want to implement IGL(Image Based Lighting), or reflection effect, u can refer to
@@ -19,7 +19,7 @@ export class EnvironmentSystem extends BaseObject {
 
     const loader = new EXRLoader();
     loader.load(
-      "./assets/textures/warm_restaurant_night_4k.exr",
+      './assets/textures/warm_restaurant_night_4k.exr',
       (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
 
@@ -30,25 +30,20 @@ export class EnvironmentSystem extends BaseObject {
         // 3. loader.load callback -> will behind add
 
         if (this.parent) {
-          console.log("EnvironmentSystem: Texture loaded, applying to scene.");
+          console.log('EnvironmentSystem: Texture loaded, applying to scene.');
           this.parent.environment = texture;
           this.parent.background = texture; // If u want to set it as background
           // this.parent.backgroundBlurriness = 0.5; // Optional: blur background
         } else {
-          console.warn(
-            "EnvironmentSystem: Loaded texture but no parent scene found!"
-          );
+          console.warn('EnvironmentSystem: Loaded texture but no parent scene found!');
         }
       },
       (xhr) => {
         // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
       },
       (error) => {
-        console.error(
-          "EnvironmentSystem: An error occurred loading the HDRI",
-          error
-        );
-      }
+        console.error('EnvironmentSystem: An error occurred loading the HDRI', error);
+      },
     );
   }
 }

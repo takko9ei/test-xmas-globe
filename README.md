@@ -19,7 +19,7 @@ This project is a WebGL-based 3D scene rendering a Christmas-themed snow globe. 
 - **Interactive Controls**: A custom-styled GUI panel (located at the top-right) allows users to adjust:
   - **Lights**: Control Intensity, Color, and Position (X, Y, Z) for Main, Fill, and Rim lights.
 - **Dynamic Lighting**: Three-point lighting setup (Main, Fill, Rim) to create a studio-like atmosphere.
-- **Snow System**: A particle-based snow system with optimized physics for wind and turbulence.
+- **Snow System**: A particle-based snow system with optimized physics for dragging interaction.
 - **Inner World**: A procedurally assembled scene containing:
   - A stylized Christmas Tree with decorations (ornaments, ribbons, star).
   - A Snowman and a Tiny Cabin.
@@ -62,7 +62,7 @@ Three.jsを使用して構築された、美しくインタラクティブな3D�
 - **インタラクティブな操作**: 画面右上のカスタムGUIパネルで以下を調整できます：
   - **ライト**: メイン、フィル、リムライトの強度、色、位置（X, Y, Z）を制御可能。
 - **ダイナミックライティング**: スタジオのような雰囲気を出すための3点照明セットアップ（メイン、フィル、リム）。
-- **雪システム**: 風や乱気流を考慮した物理演算によるパーティクルベースの雪。
+- **雪システム**: ドラッグインタラクションによるパーティクルベースの雪。
 - **内部世界**: 手続き型（プロシージャル）に生成・配置されたシーン：
   - 装飾（オーナメント、リボン、星）が施された様式化されたクリスマスツリー。
   - 雪だるまと小さな小屋。
@@ -78,7 +78,7 @@ Three.jsを使用して構築された、美しくインタラクティブな3D�
 - **`Lights.js`**: 3つのポイントライト（メイン、フィル、リム）を管理し、GUI入力に基づいて更新します。
 - **`InnerWorld.js`**: ドーム内部のシーン（ツリー、雪だるま、小屋）の読み込みと生成を処理します。ツリーの葉のためのカスタムシェーダーマテリアルを実装しています。
 - **`GlobeGlass.js`**: 物理マテリアルプロパティを持つ外部ガラス球を作成します。
-- **`SnowSystem.js`**: 雪の結晶パーティクルとその動きのロジックを管理します。
+- **`SnowSystem.js`**: 雪のパーティクルとその動きのロジックを管理します。
 
 ### GitHub Pagesで見る
 
@@ -105,7 +105,7 @@ https://github.com/Earl271/test-xmas-globe
 - **交互式控制**: 通过右上角的自定义 GUI 面板，用户可以调整：
   - **灯光**: 控制主光（Main）、补光（Fill）和轮廓光（Rim）的强度、颜色以及位置（X, Y, Z）。
 - **动态照明**: 采用三点布光法（主光、补光、轮廓光）营造类似摄影棚的氛围。
-- **雪花系统**: 基于粒子的雪花系统，包含模拟风和湍流的物理效果。
+- **雪花系统**: 基于粒子的雪花系统，包含模拟拖拽交互的物理效果。
 - **内部世界**: 程序化生成的场景，包含：
   - 带有装饰（挂饰、彩带、星星）的风格化圣诞树。
   - 雪人和小木屋。

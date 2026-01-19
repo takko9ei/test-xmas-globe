@@ -27,6 +27,11 @@ export function createGlitterMaterial(options = {}) {
   });
 
   // Inject logic to mix colors per instance
+  // The color logic here is from Kota's code, which is difficult to merge.
+  // For Kota's original work, check:
+  // https://github.com/takko9ei/test-xmas-globe/tree/archive/earl271-role-c-snow
+  // or
+  // https://github.com/Earl271/test-xmas-globe
   material.onBeforeCompile = (shader) => {
     // 1. Vertex Shader: Define varying and random function
     shader.vertexShader = shader.vertexShader.replace(

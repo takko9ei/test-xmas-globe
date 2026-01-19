@@ -17,7 +17,7 @@ export function createGlitterMaterial(options = {}) {
     textureCache[cacheKey] = snowTex;
   }
 
-  return new THREE.MeshBasicMaterial({
+  const material = new THREE.MeshBasicMaterial({
     color: color,
     map: snowTex,
     transparent: true,
@@ -25,6 +25,58 @@ export function createGlitterMaterial(options = {}) {
     depthWrite: false,
     side: THREE.DoubleSide,
   });
+
+  // Inject logic to mix colors per instance
+  material.onBeforeCompile = (shader) => {
+    // 1. Vertex Shader: Define varying and random function
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <common>',
+      `
+      #include <common>
+      varying vec3 vInstanceMixedColor;
+      
+      float getGlitterRandom(float seed) {
+          return fract(sin(seed) * 43758.5453123);
+      }
+      `,
+    );
+
+    // 2. Vertex Shader: Calculate mixed color using gl_InstanceID
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      `
+      #include <begin_vertex>
+      
+      // Logic from alternatives: Light Blue (219, 238, 255) and Silver (0xffffff)
+      vec3 colBlue = vec3(0.859, 0.933, 1.0);
+      vec3 colSilver = vec3(1.0, 1.0, 1.0);
+      
+      // Use instance ID as seed for static random color per particle
+      float mixRatio = getGlitterRandom(float(gl_InstanceID));
+      vInstanceMixedColor = mix(colSilver, colBlue, mixRatio);
+      `,
+    );
+
+    // 3. Fragment Shader: Receive varying
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <common>',
+      `
+      #include <common>
+      varying vec3 vInstanceMixedColor;
+      `,
+    );
+
+    // 4. Fragment Shader: Apply color to diffuse
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <map_fragment>',
+      `
+      #include <map_fragment>
+      diffuseColor.rgb *= vInstanceMixedColor;
+      `,
+    );
+  };
+
+  return material;
 }
 
 function createSnowflakeTexture(size = 128) {

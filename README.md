@@ -42,6 +42,13 @@ The project follows a modular object-oriented architecture:
 This project is deployed and visible via GitHub Pages.
 [GitHub Pages](https://takko9ei.github.io/test-xmas-globe/)
 
+### Note
+
+Due to significant merge conflicts during the final phase of development, team member Earl271's work was not merged via git. However, we manually integrated these logics into the existing code. For Earl271's original work, please refer to:
+https://github.com/takko9ei/test-xmas-globe/tree/archive/earl271-role-c-snow
+or
+https://github.com/Earl271/test-xmas-globe
+
 ---
 
 ## 🇯🇵 日本語
@@ -78,6 +85,13 @@ Three.jsを使用して構築された、美しくインタラクティブな3D�
 このプロジェクトはGitHub Pagesで公開されています。
 [GitHub Pages](https://takko9ei.github.io/test-xmas-globe/)
 
+### 注記
+
+開発の最終段階で大きなマージコンフリクトが発生したため、メンバーEarl271の開発内容はgitを使用してマージされませんでした。しかし、私たちは手動でこれらのロジックを既存のコードに追加しました。Earl271のオリジナルの作業については、以下を参照してください。
+https://github.com/takko9ei/test-xmas-globe/tree/archive/earl271-role-c-snow
+または
+https://github.com/Earl271/test-xmas-globe
+
 ---
 
 ## 🇨🇳 中文
@@ -113,3 +127,10 @@ Three.jsを使用して構築された、美しくインタラクティブな3D�
 
 本项目已部署并通过 GitHub Pages 可见。
 [通过 GitHub Pages 链接访问：](https://takko9ei.github.io/test-xmas-globe/)
+
+### 说明
+
+由于在开发的收尾阶段遇到了比较大的合并冲突，组员Earl271的开发没有被使用git合并。但是，我们手动在已经存在的代码中添加了这些逻辑。对于Earl271的工作，请参阅：
+https://github.com/takko9ei/test-xmas-globe/tree/archive/earl271-role-c-snow
+or
+https://github.com/Earl271/test-xmas-globe

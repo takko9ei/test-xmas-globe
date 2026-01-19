@@ -11,7 +11,7 @@ export class SnowSystem extends BaseObject {
       sphereRadius: 0.95,
       sphereCenter: new THREE.Vector3(0, 0, 0),
       particleSpeed: 0.003,
-      particleSize: 0.02,
+      particleSize: 0.0225,
       color: new THREE.Color(0xffffff),
       brightness: 1.9,
     };

@@ -14,7 +14,7 @@ export class GlobeGlass extends BaseObject {
       (gltf) => {
         this.model = gltf.scene;
 
-        // Apply Normal Material to all meshes in the model
+        // Apply Normal Material to all meshes in the model 1
         this.model.traverse((child) => {
           if (child.isMesh) {
             child.material = new THREE.MeshPhysicalMaterial({
